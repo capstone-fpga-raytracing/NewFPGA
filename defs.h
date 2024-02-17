@@ -1,26 +1,30 @@
 #pragma once
 
-#include "uintN_t.h"
+// compiling for Cyclone V
+#pragma PART "5CSEMA5F31C6"
+
 #include "intN_t.h"
+#include "uintN_t.h"
 
 #define STR(s) #s
 #define XSTR(s) STR(s)
 
-#define CONCAT(x, y) x ## y
-#define CONCAT3(x, y, z) x ## y ## z
-#define XCONCAT3(x, y, z) CONCAT3(x, y, z)
-
 // Max words readable/writable at a time using avalon_sdr.
-// This value is arbitrary, we can increase it later if 
-// necessary (although there might be synthesis limits 
-// beyond widths of 65536).
+// This value is arbitrary, we can increase it later if necessary
+// (although there might be synthesis limits beyond widths of 65536).
 #define MAX_NREAD 896
 #define MAX_NWRITE 256
 #define MAX_NREAD_BITS 28672
 #define MAX_NWRITE_BITS 8192
 
-typedef XCONCAT3(uint, MAX_NREAD_BITS, _t) avsdr_rddata_t;
-typedef XCONCAT3(uint, MAX_NWRITE_BITS, _t) avsdr_wrdata_t;
+// PipelineC doesn't support bit-widths this long, but in uintN_t.h,
+// all types too large to fit in plain C are defined as unsigned long long
+typedef unsigned long long uint28672_t;
+typedef unsigned long long uint8192_t;
+
+// can't be typedefs, some bug in pipelineC
+#define AVSDR_RDDATA_T uint28672_t
+#define AVSDR_WRDATA_T uint8192_t
 
 // Input from SDRAM controller in Qsys
 typedef struct avmm_in
@@ -50,7 +54,7 @@ typedef struct avsdr_in
     uint1_t writestart;
     uint32_t baseaddr;
     uint30_t nelems;
-    avsdr_wrdata_t writedata;
+    AVSDR_WRDATA_T writedata;
 }
 avsdr_in;
 
@@ -59,7 +63,7 @@ typedef struct avsdr_out
     avmm_out av;
     uint1_t readend;
     uint1_t writeend;
-    avsdr_rddata_t readdata;
+    AVSDR_RDDATA_T readdata;
 }
 avsdr_out;
 

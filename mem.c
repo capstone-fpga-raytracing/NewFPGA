@@ -9,9 +9,9 @@ uint32_t sdr_baseaddr;
 // how many words to read/write
 uint30_t sdr_nelems;
 // data is read into this buffer
-avsdr_rddata_t sdr_readdata;
+AVSDR_RDDATA_T sdr_readdata;
 // data is written from this buffer
-avsdr_wrdata_t sdr_writedata;
+AVSDR_WRDATA_T sdr_writedata;
 
 // start a read operation
 uint1_t sdr_readstart = 0;
@@ -107,18 +107,18 @@ inline avmm_out setup_avalon_sdr(avmm_in avin)
 // deserialize data into an array of bv types.
 // This can be written in C as well but it's a bit more convenient in VHDL
 #pragma FUNC_WIRES pack_bvs
-bv_array_128_t pack_bvs(avsdr_rddata_t data)
+bv_array_128_t pack_bvs(AVSDR_RDDATA_T data)
 {
     __vhdl__("\n\
     begin \n\
         i_gen: for i in 0 to 127 generate \n\
-            return_output.data(i).cmin(0) <= data((32*(7*i+1)-1) downto (32*7*i)); \n\
-            return_output.data(i).cmin(1) <= data((32*(7*i+2)-1) downto (32*(7*i+1))); \n\
-            return_output.data(i).cmin(2) <= data((32*(7*i+3)-1) downto (32*(7*i+2))); \n\
-            return_output.data(i).cmax(0) <= data((32*(7*i+4)-1) downto (32*(7*i+3))); \n\
-            return_output.data(i).cmax(1) <= data((32*(7*i+5)-1) downto (32*(7*i+4))); \n\
-            return_output.data(i).cmax(2) <= data((32*(7*i+6)-1) downto (32*(7*i+5))); \n\
-            return_output.data(i).ntris   <= data((32*(7*i+7)-1) downto (32*(7*i+6))); \n\
+            return_output.data(i).cmin(0) <= signed(data((32*(7*i+1)-1) downto (32*7*i))); \n\
+            return_output.data(i).cmin(1) <= signed(data((32*(7*i+2)-1) downto (32*(7*i+1)))); \n\
+            return_output.data(i).cmin(2) <= signed(data((32*(7*i+3)-1) downto (32*(7*i+2)))); \n\
+            return_output.data(i).cmax(0) <= signed(data((32*(7*i+4)-1) downto (32*(7*i+3)))); \n\
+            return_output.data(i).cmax(1) <= signed(data((32*(7*i+5)-1) downto (32*(7*i+4)))); \n\
+            return_output.data(i).cmax(2) <= signed(data((32*(7*i+6)-1) downto (32*(7*i+5)))); \n\
+            return_output.data(i).ntris   <= signed(data((32*(7*i+7)-1) downto (32*(7*i+6)))); \n\
         end generate; \n\
     ");
 }
@@ -136,7 +136,7 @@ bv_array_128_t read_all_bvs(uint32_t baseaddr, uint8_t num_bv)
     // ... store sdr_readdata into register data
     // ... if readend, transition to next state of FSM (i.e. beyond loop)
     // end
-    avsdr_rddata_t data;
+    AVSDR_RDDATA_T data;
     while (!sdr_readend) 
     {
         sdr_baseaddr = baseaddr;
