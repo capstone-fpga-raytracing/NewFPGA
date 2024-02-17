@@ -72,7 +72,6 @@ always @* begin
    sdr_readdata <= 'b0;
    sdr_writeend <= 1'b0;
    sdr_readend <= 1'b0;
-
    
    case (cur_state)
       INIT: 

@@ -45,9 +45,9 @@ avmm_out;
 
 typedef struct avsdr_in
 {
-	avmm_in av;
-	uint1_t readstart;
-	uint1_t writestart;
+    avmm_in av;
+    uint1_t readstart;
+    uint1_t writestart;
     uint32_t baseaddr;
     uint30_t nelems;
     avsdr_wrdata_t writedata;
@@ -56,9 +56,9 @@ avsdr_in;
 
 typedef struct avsdr_out
 {
-	avmm_out av;
-	uint1_t readend;
-	uint1_t writeend;
+    avmm_out av;
+    uint1_t readend;
+    uint1_t writeend;
     avsdr_rddata_t readdata;
 }
 avsdr_out;
