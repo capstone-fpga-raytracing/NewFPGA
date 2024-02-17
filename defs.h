@@ -1,5 +1,3 @@
-#pragma once
-
 // compiling for Cyclone V
 #pragma PART "5CSEMA5F31C6"
 
@@ -9,22 +7,23 @@
 #define STR(s) #s
 #define XSTR(s) STR(s)
 
-// Max words readable/writable at a time using avalon_sdr.
-// This value is arbitrary, we can increase it later if necessary
-// (although there might be synthesis limits beyond widths of 65536).
-#define MAX_NREAD 896
-#define MAX_NWRITE 256
-#define MAX_NREAD_BITS 28672
-#define MAX_NWRITE_BITS 8192
+// Max words readable/writable at a time.
+// Avalon_sdr allows for much larger size (upto 2048), but 
+// due to a stupid pipelineC bug nothing bigger than this works.
+// Unfortunately this is too small to parallelize any intersection
+// or shading calculations.
+#define MAX_NREAD 8
+#define MAX_NWRITE 8
+#define MAX_NREAD_BITS 256
+#define MAX_NWRITE_BITS 256
 
 // PipelineC doesn't support bit-widths this long, but in uintN_t.h,
 // all types too large to fit in plain C are defined as unsigned long long
-typedef unsigned long long uint28672_t;
-typedef unsigned long long uint8192_t;
+//typedef unsigned long long uint2048_t;
+//typedef unsigned long long uint2048_t;
 
-// can't be typedefs, some bug in pipelineC
-#define AVSDR_RDDATA_T uint28672_t
-#define AVSDR_WRDATA_T uint8192_t
+#define AVSDR_RDDATA_T uint256_t
+#define AVSDR_WRDATA_T uint256_t
 
 // Input from SDRAM controller in Qsys
 typedef struct avmm_in
@@ -63,7 +62,7 @@ typedef struct avsdr_out
     avmm_out av;
     uint1_t readend;
     uint1_t writeend;
-    AVSDR_RDDATA_T readdata;
+    AVSDR_WRDATA_T readdata;
 }
 avsdr_out;
 

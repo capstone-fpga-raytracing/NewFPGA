@@ -54,11 +54,13 @@ avsdr_out avalon_sdr(avsdr_in inputs)
             sdr_readstart        : in  std_logic; \n\
             sdr_readend          : out std_logic; \n\
             sdr_writestart       : in  std_logic; \n\
-            sdr_writeend         : out std_logic; \n\
+            sdr_writeend         : out std_logic \n\
         ); \n\
-    end component avalon_sdr; \n\
+    end component; \n\
     \n\
-    avalon_sdr_0 : component avalon_sdr \n\
+    begin \n\
+    \n\
+    inst : avalon_sdr \n\
         generic map ( \n\
             MAX_NREAD                   =>" XSTR(MAX_NREAD) ", \n\
             MAX_NWRITE                  =>" XSTR(MAX_NWRITE) " \n\
@@ -86,7 +88,7 @@ avsdr_out avalon_sdr(avsdr_in inputs)
     ");
 }
 
-inline avmm_out setup_avalon_sdr(avmm_in avin)
+avmm_out setup_avalon_sdr(avmm_in avin)
 {
     avsdr_in sdrin;
     sdrin.av = avin;
@@ -107,11 +109,11 @@ inline avmm_out setup_avalon_sdr(avmm_in avin)
 // deserialize data into an array of bv types.
 // This can be written in C as well but it's a bit more convenient in VHDL
 #pragma FUNC_WIRES pack_bvs
-bv_array_128_t pack_bvs(AVSDR_RDDATA_T data)
+bv_array_4_t pack_bvs(AVSDR_RDDATA_T data)
 {
     __vhdl__("\n\
     begin \n\
-        i_gen: for i in 0 to 127 generate \n\
+        i_gen: for i in 0 to 3 generate \n\
             return_output.data(i).cmin(0) <= signed(data((32*(7*i+1)-1) downto (32*7*i))); \n\
             return_output.data(i).cmin(1) <= signed(data((32*(7*i+2)-1) downto (32*(7*i+1)))); \n\
             return_output.data(i).cmin(2) <= signed(data((32*(7*i+3)-1) downto (32*(7*i+2)))); \n\
@@ -123,7 +125,7 @@ bv_array_128_t pack_bvs(AVSDR_RDDATA_T data)
     ");
 }
 
-bv_array_128_t read_all_bvs(uint32_t baseaddr, uint8_t num_bv)
+bv_array_4_t read_all_bvs(uint32_t baseaddr, uint8_t num_bv)
 {
     // see wiki/FSM-Style for how FSM states are implied.
     // code reference: examples/arty/src/mnist/eth_app.c#L172
@@ -140,7 +142,7 @@ bv_array_128_t read_all_bvs(uint32_t baseaddr, uint8_t num_bv)
     while (!sdr_readend) 
     {
         sdr_baseaddr = baseaddr;
-        sdr_nelems = sizeof(bv) * num_bv;
+        sdr_nelems = 7 * num_bv;
         sdr_readstart = !sdr_readend;
         data = sdr_readdata;
         __clk();
