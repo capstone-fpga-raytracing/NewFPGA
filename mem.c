@@ -103,7 +103,7 @@ avmm_out setup_avalon_sdr(avmm_in avin)
     return sdrout.av;
 }
 
-// deserialize data into an array of bv types.
+// deserialize data into an array of bvs.
 // This can be written in C as well but it's a bit more convenient in VHDL
 #pragma FUNC_WIRES pack_bvs
 bv_array_9_t pack_bvs(AVSDR_RDDATA_T data)

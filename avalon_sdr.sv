@@ -34,11 +34,13 @@ module avalon_sdr
 logic [30:0] max_offset;
 assign max_offset = 2*sdr_nelems - 1;
 
-localparam INIT = 2'd0,
-           READ_ASSERT = 2'd1,
-           WRITE_ASSERT = 2'd2;
+localparam INIT = 3'd0,
+           READ_ASSERT = 3'd1,
+           WRITE_ASSERT = 3'd2,
+           RDDONE = 3'd3,
+           WRDONE = 3'd4;
 
-logic [1:0] cur_state, next_state;
+logic [2:0] cur_state, next_state;
 
 always_ff @(posedge clk) begin
    if (reset) cur_state <= INIT;
@@ -51,11 +53,10 @@ reg [30:0] offset;
 reg offset_en;
 
 always_ff @(posedge clk) begin
-   if (reset || (cur_state == INIT)) begin
+   if (reset || (cur_state == INIT))
       offset <= 31'd0;
-   end
    else if (offset_en)
-      offset <= offset + 31'd1;
+      offset++;
 end
 
 always @* begin
@@ -89,7 +90,7 @@ always @* begin
          
          if (!avm_m0_waitrequest && offset >= max_offset) begin
             sdr_writeend <= 1'b1;
-            next_state <= INIT;
+            next_state <= WRDONE;
          end else 
             next_state <= WRITE_ASSERT;
       end
@@ -103,11 +104,20 @@ always @* begin
          
          if (!avm_m0_waitrequest && offset >= max_offset) begin
             sdr_readend <= 1'b1;
-            next_state <= INIT;
+            next_state <= RDDONE;
          end else
             next_state <= READ_ASSERT;
       end
-         
+
+      RDDONE: begin
+         //sdr_readend <= 1'b1;
+         next_state <= INIT;
+      end
+
+      WRDONE: begin
+         //srd_writeend <= 1'b1;
+         next_state <= INIT;
+      end
    endcase
 end
     
