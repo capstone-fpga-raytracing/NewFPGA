@@ -27,10 +27,7 @@ uint1_t sdr_writeend;
 #pragma FUNC_BLACKBOX avalon_sdr
 avsdr_out avalon_sdr(avsdr_in inputs)
 {
-    // Instantiate avalon_sdr.
-    // I copied this from Computer_System.vhd and modified it for pipelineC
-    // see wiki/Raw-HDL-Insertion
-    __vhdl__("\n\
+       __vhdl__("\n\
     component avalon_sdr is \n\
         generic ( \n\
             MAX_NREAD            : integer := 1; \n\
@@ -59,7 +56,6 @@ avsdr_out avalon_sdr(avsdr_in inputs)
     end component; \n\
     \n\
     begin \n\
-    \n\
     inst : avalon_sdr \n\
         generic map ( \n\
             MAX_NREAD                   =>" XSTR(MAX_NREAD) ", \n\
@@ -86,7 +82,115 @@ avsdr_out avalon_sdr(avsdr_in inputs)
             sdr_writeend                => return_output.writeend(0) \n\
         ); \n\
     ");
+
+    // avalon_sdr, painfully converted from SystemVerilog to VHDL, with some help from 
+    // IcarusVerilog (IcarusVerilog only gets about 50% of it right).
+    // After writing this I'm starting to love Verilog. VHDL is terribly verbose.
+    //
+    // Ideally we could just instantiate the SystemVerilog version directly from here 
+    // (that's what FUNC_BLACKBOX is for, see wiki/Raw-HDL-Insertion),
+    // but it appears this feature is broken.
+    // 
+    /*
+    __vhdl__("\n\
+        signal avm_m0_address_Reg : unsigned(31 downto 0);\n\
+        signal avm_m0_read_Reg : std_logic;\n\
+        signal avm_m0_write_Reg : std_logic;\n\
+        signal avm_m0_writedata_Reg : unsigned(15 downto 0);\n\
+        signal sdr_readdata_Reg : unsigned(2047 downto 0);\n\
+        signal sdr_readend_Reg : std_logic;\n\
+        signal sdr_writeend_Reg : std_logic;\n\
+        signal cur_state : unsigned(1 downto 0);\n\
+        signal next_state : unsigned(1 downto 0);\n\
+        signal max_offset : unsigned(30 downto 0);\n\
+        signal offset : unsigned(30 downto 0);\n\
+        signal offset_en : std_logic;\n\
+    begin\n\
+        return_output.av.address <= avm_m0_address_Reg;\n\
+        return_output.av.read(0) <= avm_m0_read_Reg;\n\
+        return_output.av.write(0) <= avm_m0_write_Reg;\n\
+        return_output.av.writedata <= avm_m0_writedata_Reg;\n\
+        return_output.readdata <= sdr_readdata_Reg;\n\
+        return_output.readend(0) <= sdr_readend_Reg;\n\
+        return_output.writeend(0) <= sdr_writeend_Reg;\n\
+        max_offset <= Resize(2*inputs.nelems-1, 31);\n\
+        return_output.av.byteenable <= \"11\";\n\
+        \n\
+        process (clk) is\n\
+        begin\n\
+            if rising_edge(clk) then\n\
+            if inputs.av.reset(0) = '1' then\n\
+                cur_state <= \"00\";\n\
+            else\n\
+                cur_state <= next_state;\n\
+            end if;\n\
+            end if;\n\
+        end process;\n\
+        \n\
+        process (clk) is\n\
+        begin\n\
+            if rising_edge(clk) then\n\
+            if (inputs.av.reset(0) = '1') or (cur_state = \"00\") then\n\
+                offset <= \"0000000000000000000000000000000\";\n\
+            else\n\
+                if offset_en = '1' then\n\
+                offset <= offset + \"0000000000000000000000000000001\";\n\
+                end if;\n\
+            end if;\n\
+            end if;\n\
+        end process;\n\
+        \n\
+        process (cur_state, inputs.writestart, inputs.readstart, inputs.baseaddr, offset, inputs.writedata, inputs.av.waitrequest, max_offset, inputs.av.readdata) is\n\
+        begin\n\
+            avm_m0_write_Reg <= '0';\n\
+            avm_m0_read_Reg <= '0';\n\
+            avm_m0_address_Reg <= X\"00000000\";\n\
+            avm_m0_writedata_Reg <= X\"0000\";\n\
+            offset_en <= '0';\n\
+            sdr_readdata_Reg <= \"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\";\n\
+            sdr_writeend_Reg <= '0';\n\
+            sdr_readend_Reg <= '0';\n\
+            case cur_state is\n\
+            when \"00\" =>\n\
+                if inputs.writestart(0) = '1' then\n\
+                next_state <= \"10\";\n\
+                else\n\
+                if inputs.readstart(0) = '1' then\n\
+                    next_state <= \"01\";\n\
+                else\n\
+                    next_state <= cur_state;\n\
+                end if;\n\
+                end if;\n\
+            when \"10\" =>\n\
+                avm_m0_write_Reg <= '1';\n\
+                avm_m0_address_Reg <= Resize(Resize(inputs.baseaddr, 64) + (Resize(offset, 32) * X\"00000002\"), 32);\n\
+                avm_m0_writedata_Reg <= inputs.writedata((To_Integer(Resize(offset, 32) * X\"00000010\") + 15) downto To_Integer(Resize(offset, 32) * X\"00000010\"));\n\
+                offset_en <= not inputs.av.waitrequest(0);\n\
+                if ((not inputs.av.waitrequest(0)) = '1') and (offset >= max_offset) then\n\
+                sdr_writeend_Reg <= '1';\n\
+                next_state <= \"00\";\n\
+                else\n\
+                next_state <= \"10\";\n\
+                end if;\n\
+            when \"01\" =>\n\
+                avm_m0_read_Reg <= '1';\n\
+                avm_m0_address_Reg <= Resize(Resize(inputs.baseaddr, 64) + (Resize(offset, 32) * X\"00000002\"), 32);\n\
+                sdr_readdata_Reg((To_Integer(Resize(offset, 32) * X\"00000010\") + 15) downto To_Integer(Resize(offset, 32) * X\"00000010\")) <= inputs.av.readdata;\n\
+                offset_en <= not inputs.av.waitrequest(0);\n\
+                if ((not inputs.av.waitrequest(0)) = '1') and (offset >= max_offset) then\n\
+                sdr_readend_Reg <= '1';\n\
+                next_state <= \"00\";\n\
+                else\n\
+                next_state <= \"01\";\n\
+                end if;\n\
+            when others =>\n\
+                null;\n\
+            end case;\n\
+        end process;\n\
+    ");
+    */
 }
+
 
 avmm_out setup_avalon_sdr(avmm_in avin)
 {
@@ -109,11 +213,11 @@ avmm_out setup_avalon_sdr(avmm_in avin)
 // deserialize data into an array of bv types.
 // This can be written in C as well but it's a bit more convenient in VHDL
 #pragma FUNC_WIRES pack_bvs
-bv_array_4_t pack_bvs(AVSDR_RDDATA_T data)
+bv_array_9_t pack_bvs(AVSDR_RDDATA_T data)
 {
     __vhdl__("\n\
     begin \n\
-        i_gen: for i in 0 to 3 generate \n\
+        i_gen: for i in 0 to 8 generate \n\
             return_output.data(i).cmin(0) <= signed(data((32*(7*i+1)-1) downto (32*7*i))); \n\
             return_output.data(i).cmin(1) <= signed(data((32*(7*i+2)-1) downto (32*(7*i+1)))); \n\
             return_output.data(i).cmin(2) <= signed(data((32*(7*i+3)-1) downto (32*(7*i+2)))); \n\
@@ -125,7 +229,7 @@ bv_array_4_t pack_bvs(AVSDR_RDDATA_T data)
     ");
 }
 
-bv_array_4_t read_all_bvs(uint32_t baseaddr, uint8_t num_bv)
+bv_array_9_t read_all_bvs(uint32_t baseaddr, uint8_t num_bv)
 {
     // see wiki/FSM-Style for how FSM states are implied.
     // code reference: examples/arty/src/mnist/eth_app.c#L172

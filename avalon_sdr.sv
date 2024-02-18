@@ -3,9 +3,8 @@
 
 module avalon_sdr 
 #(
-   // these are bogus. assign them as needed
-   parameter MAX_NREAD = 1,
-   parameter MAX_NWRITE = 1
+   parameter MAX_NREAD = 64,
+   parameter MAX_NWRITE = 64
 )
 (
    input  logic         clk,
@@ -55,11 +54,8 @@ always_ff @(posedge clk) begin
    if (reset || (cur_state == INIT)) begin
       offset <= 31'd0;
    end
-   else if (clk) begin
-      if (offset_en)
-         offset++;
-      else offset <= offset;
-   end
+   else if (offset_en)
+      offset <= offset + 31'd1;
 end
 
 always @* begin
