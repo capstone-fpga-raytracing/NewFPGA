@@ -2,7 +2,9 @@
 #include "defs.h"
 // pipelineC doesn't do headers properly, so we include
 // functions by including the whole source file
+#include "fip.c"
 #include "mem.c"
+#include "shading.c"
 
 // For testing, return bv array so we can display a value from it on hex.
 bv_array_9_t main()
