@@ -72,6 +72,18 @@ typedef struct avsdr_out
 }
 avsdr_out;
 
+typedef struct Ray
+{
+    int32_t origin[3];
+    int32_t dir[3];
+} Ray;
+
+// ray intersect tri out
+typedef struct ritri_out {
+	int32_t t;
+	uint1_t flag; // Intersect bool
+} ritri_out;
+
 typedef struct bv
 {
     int32_t cmin[3];
