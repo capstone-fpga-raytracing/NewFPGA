@@ -22,6 +22,7 @@ bv_array_9_t main()
 typedef struct top_in
 {
     avmm_in avin;
+    uint1_t start;
     // add more if needed
 } top_in;
 
@@ -46,7 +47,7 @@ top_out top(top_in topin)
     // main()'s return value is stored in o.return_output
     // see wiki/FSM-Style
     main_INPUT_t i;
-    i.input_valid = 1;
+    i.input_valid = topin.start;
     i.output_ready = 1;
     main_OUTPUT_t o = main_FSM(i);
     
