@@ -1,6 +1,6 @@
 #include "defs.h"
 
-ritri_out ray_intersect_tri(const int32_t vs[9], const Ray ray)
+ritri_out ray_intersect_tri(const Triangle tri, const Ray ray)
 {
     // solve the system by Cramer's rule:
     // [T1, T2, -D] |a|
@@ -11,11 +11,11 @@ ritri_out ray_intersect_tri(const int32_t vs[9], const Ray ray)
 	ritri_out out;
 	out.t = 0;
 	out.flag = 0;
-    const int32_t v[3][3] = {
-        { vs[0], vs[1], vs[2] },
-        { vs[3], vs[4], vs[5] },
-        { vs[6], vs[7], vs[8] },
-    };
+    
+    const int32_t v[3][3];
+    v[0] = tri.v1;
+    v[1] = tri.v2;
+    v[2] = tri.v3;
 
     const int32_t sys[4][3] = {
         { v[1][0] - v[0][0], v[1][1] - v[0][1], v[1][2] - v[0][2] }, // vert[1] - vert[0]

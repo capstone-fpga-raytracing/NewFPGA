@@ -77,7 +77,13 @@ typedef struct Ray
     int32_t origin[3];
     int32_t dir[3];
 } Ray;
+typedef struct Triangle
+{
+    int32_t v1[3];
+    int32_t v2[3];
+    int32_t v3[3];
 
+} Triangle;
 // ray intersect tri out
 typedef struct ritri_out {
 	int32_t t;
