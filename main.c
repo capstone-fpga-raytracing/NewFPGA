@@ -5,11 +5,35 @@
 #include "fip.c"
 #include "mem.c"
 #include "shading.c"
+#include "ray_intersect_tri.c"
 
 // For testing, return bv array so we can display a value from it on hex.
 bv_array_9_t main()
 {
     bv_array_9_t BV = read_all_bvs(0, 9);
+    Triangle tri1;
+    Ray ray1;
+    ray1.origin[0] = 6;
+    ray1.origin[1] = 3;
+    ray1.origin[2] = 8;
+
+    ray1.dir[0] = 5;
+    ray1.dir[1] = 2;
+    ray1.dir[2] = 37;
+
+    tri1.v1[0] = 99;
+    tri1.v1[1] = 33;
+    tri1.v1[2] = 28;
+
+    tri1.v2[0] = 23;
+    tri1.v2[1] = 32;
+    tri1.v2[2] = 66;
+
+    tri1.v3[0] = 52;
+    tri1.v3[1] = 17;
+    tri1.v3[2] = 61;
+
+    ray_intersect_tri(tri1, ray1);
     __clk(); // indicates that BV is a reg
     return BV;
 }

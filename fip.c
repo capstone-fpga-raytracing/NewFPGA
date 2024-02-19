@@ -15,12 +15,15 @@ int32_t fip_div(int32_t x, int32_t y) {
 // saturate (i.e. limit to fip bounds).
 int32_t fip_sat(int64_t val)
 {
+    int32_t ret = 0;
     if (val > FIP_MAX) {
-        return FIP_MAX;
+        ret = FIP_MAX;
     } else if (val < FIP_MIN) {
-        return FIP_MIN;
+        ret = FIP_MIN;
+    } else{
+        ret = val;
     }
-    return (int)val;
+    return (int32_t)ret;
 }
 
 int32_t fip_sat_div(int32_t x, int32_t y)
