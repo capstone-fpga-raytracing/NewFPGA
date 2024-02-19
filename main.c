@@ -7,11 +7,29 @@
 #include "shading.c"
 
 // For testing, return bv array so we can display a value from it on hex.
-bv_array_9_t main()
+Vct_3d main()
 {
     bv_array_9_t BV = read_all_bvs(0, 9);
     __clk(); // indicates that BV is a reg
-    return BV;
+
+    Ray ray;
+    ray.dir[0] = BV.data[0].cmin[0];
+    ray.dir[1] = BV.data[0].cmin[1];
+    ray.dir[2] = BV.data[0].cmin[2];
+    ray.origin[0] = BV.data[0].cmax[0];
+    ray.origin[1] = BV.data[0].cmax[1];
+    ray.origin[2] = BV.data[0].cmax[2];
+
+    Vct_3d temp = new_blinn_phong_shading(
+        BV.data[1].cmax[2],
+        ray,
+        BV.data[1].cmin[0], // hit distance
+        BV.data[1].cmin[1],
+        BV.data[1].cmin[2],
+        BV.data[1].cmax[0],
+        BV.data[1].cmax[1]
+    );
+    return temp;
 }
 
 // this indicates that main() is a stateful function i.e. an FSM.
@@ -54,7 +72,7 @@ top_out top(top_in topin)
     
     // show first byte on hex0
     topout.hex_valid = o.output_valid;
-    topout.hex[0] = (uint4_t)(o.return_output.data[0].cmin[0] & 0xF);
+    topout.hex[0] = (uint4_t)(o.return_output.var[0] & 0xF);
     
     return topout;
 }

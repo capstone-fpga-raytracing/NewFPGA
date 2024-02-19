@@ -3,35 +3,37 @@
 #define FIP_AMB 0x00002000 // 0.125
 
 Vct_3d new_blinn_phong_shading(
-    const int32_t hit_tri_id,
-    const Ray ray,
-    const int32_t t, // hit distance
-    const int32_t num_lights,
-    const uint32_t lights_addr,
-    const uint32_t mats_addr,
-    const uint32_t verts_addr
+    int32_t hit_tri_id,
+    Ray ray,
+    int32_t t, // hit distance
+    int32_t num_lights,
+    uint32_t lights_addr,
+    uint32_t mats_addr,
+    uint32_t verts_addr
 ) {
     // read vert
     int32_t vert_id = 9 * hit_tri_id;
-    Vert vert;
+    int288_t vert_array;
     while (!sdr_readend) {
         sdr_baseaddr = verts_addr + vert_id;
         sdr_nelems = 9;
         sdr_readstart = !sdr_readend;
-        vert = sdr_readdata;
+        vert_array = (int288_t)(sdr_readdata);
         __clk();
     }
+    Vert vert;
 
     // read mat
     int32_t mat_id = MATS_ELEM_SIZE * hit_tri_id;
-    Material mat;
+    int288_t mat_array;
     while (!sdr_readend) {
         sdr_baseaddr = mats_addr + mat_id;
         sdr_nelems = 9;
         sdr_readstart = !sdr_readend;
-        mat = sdr_readdata;
+        mat_array = (int288_t)(sdr_readdata);
         __clk();
     }
+    Material mat;
 
     // normal
     int32_t edge0[3] = {vert.v1[0] - vert.v0[0],
@@ -61,16 +63,17 @@ Vct_3d new_blinn_phong_shading(
     total_light.var[2] = fip_mult(mat.ka[2], FIP_AMB);
 
     // shadow, diffuse and specular
-    for (int32_t light_id = 0; light_id < num_lights; light_id++) {
+    for (int32_t light_id = 0; light_id < num_lights; light_id+=1) {
         // read light
-        Light light;
+        int192_t light_array;
         while (!sdr_readend) {
             sdr_baseaddr = lights_addr + light_id;
             sdr_nelems = 9;
             sdr_readstart = !sdr_readend;
-            light = sdr_readdata;
+            light_array = (int192_t)(sdr_readdata);
             __clk();
         }
+        Light light;
         
         // direction
         Vct_3d dir_raw;

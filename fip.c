@@ -43,8 +43,8 @@ int32_t fip_sat_add(int32_t x, int32_t y)
 }
 
 // TO DO: convert to pipelinec
-uint32_t fip_sqrt() {
-
+uint32_t fip_sqrt(int32_t x) {
+    return x+1;
 }
 
 int32_t fip_det(Vert vert) {
@@ -79,9 +79,9 @@ Vct_3d fip_normalize(Vct_3d vct)
     else {
         uint32_t norm = fip_norm(vct);
         if (norm == 0) {
-            vct[0] <<= 2;
-            vct[1] <<= 2;
-            vct[2] <<= 2;
+            vct.var[0] <<= 2;
+            vct.var[1] <<= 2;
+            vct.var[2] <<= 2;
             norm = fip_norm(vct);
         }
         normal.var[0] = fip_div(vct.var[0], norm);
