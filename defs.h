@@ -9,6 +9,11 @@
 #define STR(s) #s
 #define XSTR(s) STR(s)
 
+#define TRIS_ELEM_SIZE 3
+#define VERTS_ELEM_SIZE 3
+#define MATS_ELEM_SIZE 13
+#define LIGHTS_ELEM_SIZE 6
+
 // Max words readable/writable at a time.
 // This is a pipelinec limitation, avalon_sdr technically 
 // allows for much larger sizes (upto 2048 words, not bits).
