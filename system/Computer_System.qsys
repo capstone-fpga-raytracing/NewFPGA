@@ -73,6 +73,22 @@
          type = "String";
       }
    }
+   element Computer_System
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element Computer_System
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
    element Expansion_JP1
    {
       datum _sortIndex
@@ -538,7 +554,7 @@
  <parameter name="hideFromIPCatalog" value="false" />
  <parameter name="lockedInterfaceDefinition" value="" />
  <parameter name="maxAdditionalLatency" value="1" />
- <parameter name="projectName">DE1_SoC_Computer.qpf</parameter>
+ <parameter name="projectName" value="raytracer.qpf" />
  <parameter name="sopcBorderPoints" value="false" />
  <parameter name="systemHash" value="0" />
  <parameter name="testBenchDutName" value="" />
@@ -567,10 +583,20 @@
  <interface name="out_data" internal="avalon_sdr_0.out_data" />
  <interface name="out_do_read" internal="avalon_sdr_0.out_do_read" />
  <interface
+   name="sdr_baseaddr"
+   internal="avalon_sdr_0.sdr_baseaddr"
+   type="conduit"
+   dir="end" />
+ <interface
    name="sdr_clk"
    internal="avalon_sdr_0.sdr_clk"
    type="clock"
    dir="start" />
+ <interface
+   name="sdr_nelems"
+   internal="avalon_sdr_0.sdr_nelems"
+   type="conduit"
+   dir="end" />
  <interface name="sdr_read_clk" internal="avalon_sdr_0.read_clk" />
  <interface name="sdr_read_data" internal="avalon_sdr_0.read_data" />
  <interface name="sdr_read_end" internal="avalon_sdr_0.read_end" />
@@ -579,19 +605,36 @@
    internal="avalon_sdr_0.sdr_readdata"
    type="conduit"
    dir="end" />
- <interface
-   name="sdr_readdatavalid"
-   internal="avalon_sdr_0.sdr_readdatavalid"
-   type="conduit"
-   dir="end" />
+ <interface name="sdr_readdatavalid" internal="avalon_sdr_0.sdr_readdatavalid" />
  <interface
    name="sdr_readend"
    internal="avalon_sdr_0.sdr_readend"
    type="conduit"
    dir="end" />
+ <interface name="sdr_readoff" internal="avalon_sdr_0.sdr_readoff" />
  <interface
-   name="sdr_readoff"
-   internal="avalon_sdr_0.sdr_readoff"
+   name="sdr_readstart"
+   internal="avalon_sdr_0.sdr_readstart"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="sdr_reset"
+   internal="avalon_sdr_0.sdr_reset"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="sdr_writedata"
+   internal="avalon_sdr_0.sdr_writedata"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="sdr_writeend"
+   internal="avalon_sdr_0.sdr_writeend"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="sdr_writestart"
+   internal="avalon_sdr_0.sdr_writestart"
    type="conduit"
    dir="end" />
  <interface name="sdram" internal="SDRAM.wire" type="conduit" dir="end" />
@@ -601,6 +644,11 @@
    type="clock"
    dir="start" />
  <interface name="sdram_data" internal="avalon_sdr_0.data" />
+ <interface
+   name="start_rt"
+   internal="avalon_control_0.do_read"
+   type="conduit"
+   dir="end" />
  <interface
    name="system_pll_ref_clk"
    internal="System_PLL.ref_clk"
@@ -1913,7 +1961,10 @@
    kind="avalon_control"
    version="1.0"
    enabled="1" />
- <module name="avalon_sdr_0" kind="avalon_sdr" version="1.0" enabled="1" />
+ <module name="avalon_sdr_0" kind="avalon_sdr" version="1.0" enabled="1">
+  <parameter name="MAX_NREAD" value="64" />
+  <parameter name="MAX_NWRITE" value="64" />
+ </module>
  <connection
    kind="avalon"
    version="18.1"
@@ -2633,17 +2684,6 @@
    version="18.1"
    start="System_PLL.sys_clk"
    end="ARM_A9_HPS.h2f_lw_axi_clock" />
- <connection
-   kind="conduit"
-   version="18.1"
-   start="avalon_sdr_0.sdr_readstart"
-   end="avalon_control_0.do_read">
-  <parameter name="endPort" value="" />
-  <parameter name="endPortLSB" value="0" />
-  <parameter name="startPort" value="" />
-  <parameter name="startPortLSB" value="0" />
-  <parameter name="width" value="0" />
- </connection>
  <connection
    kind="interrupt"
    version="18.1"

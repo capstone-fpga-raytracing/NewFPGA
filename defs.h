@@ -77,6 +77,28 @@ typedef struct avsdr_out
 }
 avsdr_out;
 
+
+
+typedef struct avsdr_out2
+{
+    uint1_t readstart;
+    uint1_t writestart;
+    uint32_t baseaddr;
+    uint30_t nelems;
+    AVSDR_WRDATA_T writedata;
+}
+avsdr_out2;
+
+typedef struct avsdr_in2
+{
+    uint1_t readend;
+    uint1_t writeend;
+    AVSDR_RDDATA_T readdata;
+}
+avsdr_in2;
+
+
+
 typedef struct Ray
 {
     int32_t origin[3];

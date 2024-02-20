@@ -274,34 +274,25 @@ output               HPS_USB_STP;
 //assign HEX5 = ~hex5_hex4[14: 8];
 
 
-logic sdr_clk;
-logic [479:0] sdr_readdata;
-logic [4:0] sdr_readoff;
-logic sdr_readend, sdr_readdatavalid;
-
-
-logic [14:0][31:0] raydata;
+//logic sdr_clk;
+//logic [479:0] sdr_readdata;
+//logic [4:0] sdr_readoff;
+//logic sdr_readend, sdr_readdatavalid;
 //
-//always_ff @(posedge sdr_clk) 
-//begin
-//    if (!sdr_readend && sdr_readdatavalid) 
-//  begin
-//        if (sdr_readoff[0] == 1'b0)
-//            raydata[sdr_readoff >> 1][15:0] <= sdr_readdata;
-//        else
-//            raydata[sdr_readoff >> 1][31:16] <= sdr_readdata;
-//    end
-//end
+//
+//
+//
 
-logic sdr_readstart;
-assign sdr_readstart = 1'b0;
+
+//logic sdr_readstart;
+//assign sdr_readstart = 1'b0;
 
 //logic sdr_writestart;
 //logic write_started;
-logic sdr_writeend;
-
-wire [63:0] sdr_writedata;
-assign sdr_writedata = 64'hBEEFD00DDEADBEEF;
+//logic sdr_writeend;
+//
+//wire [63:0] sdr_writedata;
+//assign sdr_writedata = 64'hBEEFD00DDEADBEEF;
 //always_ff @(posedge sdr_clk)
 //begin
 // if(!write_started)
@@ -313,42 +304,83 @@ assign sdr_writedata = 64'hBEEFD00DDEADBEEF;
 //    sdr_writestart <= 1'b0;
 //end
 
-assign LEDR[9] = sdr_writeend;
-
-assign LEDR[7] = sdr_readend;
+//assign LEDR[9] = sdr_writeend;
+//
+//assign LEDR[7] = sdr_readend;
 //=======================================================
 //  Testing
 //=======================================================
 
-/*
+wire sdr_clk;
+logic sdr_reset;
+reg sdr_readend_reg;
+reg start_rt_reg;
+
+always @(posedge sdr_clk)
+begin
+   if (sdr_reset) begin
+		sdr_readend_reg <= 1'b0;
+   end
+	else if (sdr_readend)
+		sdr_readend_reg <= 1'b1;
+	else
+		sdr_readend_reg <= sdr_readend_reg;
+	
+	if (sdr_reset) 
+		start_rt_reg <= 1'b0;
+	else if (start_rt)
+		start_rt_reg <= 1'b1;
+	else
+		start_rt_reg <= start_rt_reg;
+end
+
+logic [2047:0] raydata;
+assign raydata = sdr_readdata;
+
+always @(posedge sdr_clk)
+begin
+
+sdr_readstart <= 1'b0;
+sdr_baseaddr <= 'b0;
+sdr_nelems <= 'b0;
+//raydata <= 'b0;
+
+if (start_rt_reg && !sdr_readend_reg && !sdr_readend) 
+  begin
+		sdr_baseaddr <= 32'd0;
+		sdr_nelems <= 30'd2;
+		sdr_readstart <= 1'b1;
+  end
+end
+
 logic raytest, raytest_clk;
 logic [9:0] raytest_addr;
 logic [31:0] raytest_data;
 
 initial raytest_addr = 10'd0;
-assign raytest = sdr_readend;
+assign raytest = sdr_readend_reg;
 
 rate_divider rd ( CLOCK_50, raytest_clk);
 
 always_ff @(posedge raytest_clk) 
 begin
    if (raytest && raytest_addr != 10'd15) begin    
-        raytest_data <= raydata[raytest_addr];
+        raytest_data <= raydata[32*raytest_addr +: 32];
         raytest_addr <= raytest_addr + 10'd1;
    end
 end
-*/
 
-logic [31:0] sdr_finaladdr;
-logic [15:0] sdr_writtendata;
+
+//logic [31:0] sdr_finaladdr;
+//logic [15:0] sdr_writtendata;
 
         
-//hex_decoder h0(.hex_digit(sdr_finaladdr[3:0]),.segments(HEX0));
-//hex_decoder h1(.hex_digit(sdr_finaladdr[7:4]),.segments(HEX1));
-//hex_decoder h2(.hex_digit(sdr_writtendata[3:0]),.segments(HEX2));
-//hex_decoder h3(.hex_digit(sdr_writtendata[7:4]),.segments(HEX3));
-//hex_decoder h4(.hex_digit(sdr_writtendata[11:8]),.segments(HEX4));
-//hex_decoder h5(.hex_digit(sdr_writtendata[15:12]),.segments(HEX5));
+hex_decoder h0(.hex_digit(raytest_data[3:0]),.segments(HEX0));
+hex_decoder h1(.hex_digit(raytest_data[7:4]),.segments(HEX1));
+hex_decoder h2(.hex_digit(raytest_data[11:8]),.segments(HEX2));
+hex_decoder h3(.hex_digit(raytest_data[15:12]),.segments(HEX3));
+hex_decoder h4(.hex_digit(raytest_data[19:16]),.segments(HEX4));
+hex_decoder h5(.hex_digit(raytest_data[23:20]),.segments(HEX5));
 
 //assign LEDR[8:0] = raytest_addr[8:0];
 
@@ -361,37 +393,47 @@ logic [15:0] sdr_writtendata;
 //assign LEDR[7:1] = fpga_leds_internal[6:0] | leds_export[6:0];
 //assign LEDR[9] = out_do_read_export;
 
-   
-   
-// hex_decoder hexdec2
-// (
-//    .hex_digit(q[7:4]),
-//    .segments(HEX1)
-// );
-// 
-// hex_decoder hexdec3
-// (
-//    .hex_digit(q[11:8]),
-//    .segments(HEX2)
-// );
-// 
-// hex_decoder hexdec4
-// (
-//    .hex_digit(q[15:12]),
-//    .segments(HEX3)
-// );
-// 
-// hex_decoder hexdec5
-// (
-//    .hex_digit(q[19:16]),
-//    .segments(HEX4)
-// );
-// 
-// hex_decoder hexdec6
-// (
-//    .hex_digit(q[23:20]),
-//    .segments(HEX5)
-// );
+logic          start_rt;
+logic [31:0]   sdr_baseaddr;
+logic [29:0]   sdr_nelems;
+logic [2047:0] sdr_readdata;
+logic          sdr_readend;
+logic          sdr_readstart;
+logic [2047:0] sdr_writedata;
+logic          sdr_writeend;
+logic          sdr_writestart;
+
+logic [3:0]    hex0_bcd;
+logic          hex0_valid;
+wire [6:0]     hex0_wire;
+reg [6:0]      hex0_reg;
+
+hex_decoder h0dec(.hex_digit(hex0_bcd),.segments(hex0_wire));
+always @(posedge CLOCK_50)
+begin
+	if (hex0_valid)
+		hex0_reg <= hex0_wire;
+end
+//assign HEX0 = hex0_reg;
+
+
+
+
+//top_v rt(
+//   .clk100(CLOCK_50),
+//   .start(start_rt),
+//   .sdr_readend(sdr_readend),
+//   .sdr_writeend(sdr_writeend),
+//   .sdr_readdata(sdr_readdata),
+//   .sdr_readstart(sdr_readstart),
+//   .sdr_writestart(sdr_writestart),
+//   .sdr_baseaddr(sdr_baseaddr),
+//   .sdr_nelems(sdr_nelems),
+//   .sdr_writedata(sdr_writedata),
+//   .hex(hex0_bcd),
+//   .hex_valid(hex0_valid)
+//);
+
 
 
 Computer_System The_System (
@@ -530,18 +572,29 @@ Computer_System The_System (
    .hps_io_hps_io_usb1_inst_NXT     (HPS_USB_NXT),
    
    // exports
-   .sdr_clk_clk(sdr_clk),
-   .sdr_readstart_export(sdr_readstart),
-   .sdr_readdata_export(sdr_readdata),
+   //.sdr_clk_clk(sdr_clk),
+   //.sdr_readstart_export(sdr_readstart),
+   //.sdr_readdata_export(sdr_readdata),
    //.sdr_readoff_export(sdr_readoff),
    //.sdr_readdatavalid_export(sdr_readdatavalid),
-   .sdr_readend_export(sdr_readend),
+   //.sdr_readend_export(sdr_readend),
    //.sdr_writestart_export(sdr_writestart),
-   .sdr_writedata_export(sdr_writedata),
-   .sdr_writeend_export(sdr_writeend),
+   //.sdr_writedata_export(sdr_writedata),
+   //.sdr_writeend_export(sdr_writeend),
    //.sdr_finaladdr_export(sdr_finaladdr),
    //.sdr_writtendata_export(sdr_writtendata)
-
+   .start_rt_export      (start_rt),
+   .sdr_baseaddr_export  (sdr_baseaddr),
+   .sdr_nelems_export    (sdr_nelems),
+   .sdr_readdata_export  (sdr_readdata),
+   .sdr_readend_export   (sdr_readend),
+   .sdr_readstart_export (sdr_readstart),
+   .sdr_writedata_export (sdr_writedata),
+   .sdr_writeend_export  (sdr_writeend),
+   .sdr_writestart_export(sdr_writestart),
+	
+	.sdr_reset_export(sdr_reset),
+	.sdr_clk_clk(sdr_clk)
 );
 
 

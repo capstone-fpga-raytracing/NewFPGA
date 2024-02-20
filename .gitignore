@@ -5,6 +5,7 @@ work/
 vsim.wlf
 *.bak
 wlft4qw64q
+*.Identifier
 
 *_sim
 *db/
@@ -15,6 +16,9 @@ simulation
 testbench
 timing
 output_files
+*hps_isw_handoff/
+hps_sdram_p0_summary.csv
+/system/Computer_System
 
 *_generation_script*
 *_inst.vhd
