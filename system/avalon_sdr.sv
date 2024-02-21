@@ -29,9 +29,9 @@ module avalon_sdr
    output logic sdr_readend,
    input  logic sdr_writestart,
    output logic sdr_writeend,
-	
-	output logic sdr_clk,
-	output logic sdr_reset
+   
+   output logic sdr_clk,
+   output logic sdr_reset
 );
 
 assign sdr_clk = clk;
@@ -43,8 +43,10 @@ assign max_offset = 2*sdr_nelems - 1;
 localparam INIT = 3'd0,
            READ_ASSERT = 3'd1,
            WRITE_ASSERT = 3'd2,
-           RDDONE = 3'd3,
-           WRDONE = 3'd4;
+           READ_STORE = 3'd3,
+           READ_NEXT = 3'd4,
+           RDDONE = 3'd5,
+           WRDONE = 3'd6;
 
 logic [2:0] cur_state, next_state;
 
@@ -67,20 +69,20 @@ always_ff @(posedge clk) begin
 end
 
 reg readdata_en;
-
 reg [32*MAX_NREAD-1:0] readdata;
-reg [32*MAX_NREAD-1:0] sdr_readdata_reg;
 
 always_ff @(posedge clk) begin
    if (reset)
-		readdata <= 'b0;
-	else if (readdata_en)
-		readdata <= sdr_readdata_reg;
-	else readdata <= readdata;
+      readdata <= 'b0;
+   else if (readdata_en)
+      readdata[16*offset +: 16] <= avm_m0_readdata;
+   else readdata <= readdata;
 end
 
 assign sdr_readdata = readdata;
 
+wire [31:0] offset_addr;
+assign offset_addr = sdr_baseaddr + (2*offset);
 
 always @* begin
    avm_m0_write <= 1'b0;
@@ -88,9 +90,8 @@ always @* begin
    avm_m0_address <= 32'd0;
    avm_m0_writedata <= 1'b0;
    offset_en <= 1'b0;
-	readdata_en <= 1'b0;
+   readdata_en <= 1'b0;
    
-	sdr_readdata_reg[16*offset +: 16] <= 'b0;
    sdr_writeend <= 1'b0;
    sdr_readend <= 1'b0;
    
@@ -108,12 +109,11 @@ always @* begin
       WRITE_ASSERT: 
       begin
          avm_m0_write <= 1'b1;
-         avm_m0_address <= sdr_baseaddr + (2 * offset);
+         avm_m0_address <= offset_addr;
          avm_m0_writedata <= sdr_writedata[16*offset +: 16];
          offset_en <= !avm_m0_waitrequest;
          
          if (!avm_m0_waitrequest && offset >= max_offset) begin
-            sdr_writeend <= 1'b1;
             next_state <= WRDONE;
          end else 
             next_state <= WRITE_ASSERT;
@@ -122,17 +122,22 @@ always @* begin
       READ_ASSERT: 
       begin
          avm_m0_read <= 1'b1;
-         avm_m0_address <= sdr_baseaddr + (2 * offset);
-			//readdata_en <= !avm_m0_waitrequest;
-			sdr_readdata_reg[16*offset +: 16] <= avm_m0_readdata;
-         offset_en <= !avm_m0_waitrequest && offset < max_offset;
-         
-         if (!avm_m0_waitrequest && offset >= max_offset) begin
-            //sdr_readend <= 1'b1;
+         avm_m0_address <= offset_addr; 
+         next_state <= avm_m0_waitrequest ? READ_ASSERT : READ_STORE;
+      end
+      
+      READ_STORE:
+      begin
+         readdata_en <= avm_m0_readdatavalid;
+         next_state <= avm_m0_readdatavalid ? READ_NEXT : READ_STORE;            
+      end
+      
+      READ_NEXT: begin
+         offset_en <= 1'b1;
+         if (offset >= max_offset) begin        
             next_state <= RDDONE;
-				readdata_en <= 1'b1;
          end else
-            next_state <= READ_ASSERT;
+            next_state <= READ_ASSERT;       
       end
 
       RDDONE: begin
@@ -141,7 +146,7 @@ always @* begin
       end
 
       WRDONE: begin
-         //srd_writeend <= 1'b1;
+         sdr_writeend <= 1'b1;
          next_state <= INIT;
       end
    endcase

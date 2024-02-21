@@ -313,62 +313,78 @@ output               HPS_USB_STP;
 
 wire sdr_clk;
 logic sdr_reset;
-reg sdr_readend_reg;
-reg start_rt_reg;
-
-always @(posedge sdr_clk)
-begin
-   if (sdr_reset) begin
-		sdr_readend_reg <= 1'b0;
-   end
-	else if (sdr_readend)
-		sdr_readend_reg <= 1'b1;
-	else
-		sdr_readend_reg <= sdr_readend_reg;
-	
-	if (sdr_reset) 
-		start_rt_reg <= 1'b0;
-	else if (start_rt)
-		start_rt_reg <= 1'b1;
-	else
-		start_rt_reg <= start_rt_reg;
-end
 
 logic [2047:0] raydata;
 assign raydata = sdr_readdata;
 
-always @(posedge sdr_clk)
-begin
+localparam READINIT = 3'd0,
+           READSTART = 3'd1,
+           READ_ASSERT = 3'd2,
+           READ_DONE = 3'd3;
 
-sdr_readstart <= 1'b0;
-sdr_baseaddr <= 'b0;
-sdr_nelems <= 'b0;
-//raydata <= 'b0;
+logic [2:0] cur_state, next_state;
 
-if (start_rt_reg && !sdr_readend_reg && !sdr_readend) 
-  begin
-		sdr_baseaddr <= 32'd0;
-		sdr_nelems <= 30'd2;
-		sdr_readstart <= 1'b1;
-  end
+always_ff @(posedge sdr_clk) begin
+   if (sdr_reset) cur_state <= READINIT;
+   else cur_state <= next_state;
 end
+
+reg rddone;
+     
+always @*
+begin
+   rddone <= 1'b0;
+   sdr_readstart <= 1'b0;
+   sdr_baseaddr <= 'hDEAD;
+   sdr_nelems <= 'd0;
+
+   case(cur_state)
+      READINIT:
+         next_state <= start_rt ? READSTART : READINIT;
+         
+      READSTART: begin
+         sdr_readstart <= 1'b1;
+         next_state <= READ_ASSERT;
+      end
+      
+      READ_ASSERT: begin
+         sdr_baseaddr <= 'b0;
+         sdr_nelems <= 30'd15;
+         next_state <= sdr_readend ? READ_DONE : READ_ASSERT;
+      end
+      
+      READ_DONE: begin
+         rddone <= 1'b1;
+         next_state <= READ_DONE;
+      end
+   endcase
+
+end
+
 
 logic raytest, raytest_clk;
 logic [9:0] raytest_addr;
 logic [31:0] raytest_data;
 
 initial raytest_addr = 10'd0;
-assign raytest = sdr_readend_reg;
+assign raytest = rddone;
 
 rate_divider rd ( CLOCK_50, raytest_clk);
 
-always_ff @(posedge raytest_clk) 
+always_ff @(posedge raytest_clk or posedge sdr_reset) 
 begin
-   if (raytest && raytest_addr != 10'd15) begin    
-        raytest_data <= raydata[32*raytest_addr +: 32];
-        raytest_addr <= raytest_addr + 10'd1;
+   if (sdr_reset) begin
+      raytest_addr <= 10'd0;
+      raytest_data <= 32'hDEAD;
+   end else if (raytest_clk) begin
+      if (raytest && raytest_addr != 10'd15) begin    
+           raytest_data <= raydata[32*raytest_addr +: 32];
+           raytest_addr <= raytest_addr + 10'd1;
+      end
    end
 end
+
+assign LEDR[0] = rddone;
 
 
 //logic [31:0] sdr_finaladdr;
@@ -411,8 +427,8 @@ reg [6:0]      hex0_reg;
 hex_decoder h0dec(.hex_digit(hex0_bcd),.segments(hex0_wire));
 always @(posedge CLOCK_50)
 begin
-	if (hex0_valid)
-		hex0_reg <= hex0_wire;
+   if (hex0_valid)
+      hex0_reg <= hex0_wire;
 end
 //assign HEX0 = hex0_reg;
 
@@ -592,9 +608,9 @@ Computer_System The_System (
    .sdr_writedata_export (sdr_writedata),
    .sdr_writeend_export  (sdr_writeend),
    .sdr_writestart_export(sdr_writestart),
-	
-	.sdr_reset_export(sdr_reset),
-	.sdr_clk_clk(sdr_clk)
+   
+   .sdr_reset_export(sdr_reset),
+   .sdr_clk_clk(sdr_clk)
 );
 
 
