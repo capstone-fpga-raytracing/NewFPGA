@@ -33,12 +33,16 @@ module avalon_sdr
 
 assign avm_m0_byteenable = 2'd3;
 
-localparam INIT = 3'd0,          
-           WRITE_ASSERT = 3'd1,
-           READ_ASSERT = 3'd2,
-           READ_WAIT = 3'd3,
-           READ_DONE = 3'd4,
-           WRITE_DONE = 3'd5;
+logic [30:0] max_offset;
+assign max_offset = 2*sdr_nelems - 1;
+
+localparam INIT = 3'd0,
+           READ_ASSERT = 3'd1,
+           WRITE_ASSERT = 3'd2,
+           READ_STORE = 3'd3,
+           READ_NEXT = 3'd4,
+           RDDONE = 3'd5,
+           WRDONE = 3'd6;
 
 logic [2:0] cur_state, next_state;
 
@@ -47,14 +51,11 @@ always_ff @(posedge clk) begin
    else cur_state <= next_state;
 end
 
-wire reg_reset;
-assign reg_reset = reset || (cur_state == INIT);
-
-reg offset_en;
 reg [30:0] offset;
+reg offset_en;
 
 always_ff @(posedge clk) begin
-   if (reg_reset)
+   if (reset || (cur_state == INIT))
       offset <= 31'd0;
    else if (offset_en)
       offset++;
@@ -64,23 +65,15 @@ end
 wire [31:0] offset_addr;
 assign offset_addr = sdr_baseaddr + (2*offset);
 
-wire [30:0] max_offset;
-assign max_offset = 2*sdr_nelems - 1;
-
-reg [30:0] rdoffset;
+reg readdata_en;
 reg [32*MAX_NREAD-1:0] readdata;
 
 always_ff @(posedge clk) begin
-   if (reg_reset)
-      rdoffset <= 'b0;
-   else if (avm_m0_readdatavalid) begin
-      readdata[16*rdoffset +: 16] <= avm_m0_readdata;
-      rdoffset <= rdoffset + 31'd1;
-   end
-   else begin
-      readdata <= readdata;
-      rdoffset <= rdoffset;
-   end
+   if (reset || (cur_state == INIT))
+      readdata <= 'b0;
+   else if (readdata_en)
+      readdata[16*offset +: 16] <= avm_m0_readdata;
+   else readdata <= readdata;
 end
 
 assign sdr_readdata = readdata;
@@ -90,9 +83,12 @@ always @* begin
    avm_m0_read <= 1'b0;
    avm_m0_address <= 32'd0;
    avm_m0_writedata <= 1'b0;
+	
+   offset_en <= 1'b0;
+   readdata_en <= 1'b0;
+   
    sdr_writeend <= 1'b0;
    sdr_readend <= 1'b0;
-   offset_en <= 1'b0;
    
    case (cur_state)
       INIT: 
@@ -101,7 +97,8 @@ always @* begin
             next_state <= WRITE_ASSERT;
          else if (sdr_readstart)
             next_state <= READ_ASSERT;
-         else next_state <= cur_state;
+         else 
+            next_state <= cur_state;
       end
         
       WRITE_ASSERT: 
@@ -111,35 +108,39 @@ always @* begin
          avm_m0_writedata <= sdr_writedata[16*offset +: 16];
          offset_en <= !avm_m0_waitrequest;
          
-         if (!avm_m0_waitrequest && offset >= max_offset)
-            next_state <= WRITE_DONE;
-         else next_state <= WRITE_ASSERT;
+         if (!avm_m0_waitrequest && offset >= max_offset) begin
+            next_state <= WRDONE;
+         end else 
+            next_state <= WRITE_ASSERT;
       end
       
       READ_ASSERT: 
       begin
          avm_m0_read <= 1'b1;
-         avm_m0_address <= offset_addr;
-         offset_en <= !avm_m0_waitrequest;
-         
-         if (!avm_m0_waitrequest && offset >= max_offset)
-            next_state <= READ_WAIT;
-         else next_state <= READ_ASSERT;
+         avm_m0_address <= offset_addr; 
+         next_state <= avm_m0_waitrequest ? READ_ASSERT : READ_STORE;
       end
       
-      READ_WAIT:
+      READ_STORE:
       begin
-         if (rdoffset > max_offset)
-            next_state <= READ_DONE;
-         else next_state <= READ_WAIT;           
+         readdata_en <= avm_m0_readdatavalid;
+         next_state <= avm_m0_readdatavalid ? READ_NEXT : READ_STORE;            
+      end
+      
+      READ_NEXT: begin
+         offset_en <= 1'b1;
+         if (offset >= max_offset) begin        
+            next_state <= RDDONE;
+         end else
+            next_state <= READ_ASSERT;       
       end
 
-      READ_DONE: begin
+      RDDONE: begin
          sdr_readend <= 1'b1;
          next_state <= INIT;
       end
 
-      WRITE_DONE: begin
+      WRDONE: begin
          sdr_writeend <= 1'b1;
          next_state <= INIT;
       end

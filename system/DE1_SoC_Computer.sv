@@ -350,6 +350,7 @@ begin
       READ_ASSERT: begin
          sdr_baseaddr <= 'b0;
          sdr_nelems <= 30'd15;
+			rddone <= sdr_readend;
          next_state <= sdr_readend ? READ_DONE : READ_ASSERT;
       end
       
@@ -366,7 +367,6 @@ logic raytest, raytest_clk;
 logic [9:0] raytest_addr;
 logic [31:0] raytest_data;
 
-initial raytest_addr = 10'd0;
 assign raytest = rddone;
 
 rate_divider rd ( CLOCK_50, raytest_clk);
