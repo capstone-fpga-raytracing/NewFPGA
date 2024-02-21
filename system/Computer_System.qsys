@@ -89,6 +89,22 @@
          type = "String";
       }
    }
+   element Computer_System
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element Computer_System
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
    element Expansion_JP1
    {
       datum _sortIndex
@@ -589,7 +605,7 @@
    dir="end" />
  <interface
    name="sdr_clk"
-   internal="avalon_sdr_0.sdr_clk"
+   internal="avalon_control_0.av_clk"
    type="clock"
    dir="start" />
  <interface
@@ -619,7 +635,7 @@
    dir="end" />
  <interface
    name="sdr_reset"
-   internal="avalon_sdr_0.sdr_reset"
+   internal="avalon_control_0.av_reset"
    type="conduit"
    dir="end" />
  <interface
@@ -646,7 +662,7 @@
  <interface name="sdram_data" internal="avalon_sdr_0.data" />
  <interface
    name="start_rt"
-   internal="avalon_control_0.do_read"
+   internal="avalon_control_0.start_rt"
    type="conduit"
    dir="end" />
  <interface

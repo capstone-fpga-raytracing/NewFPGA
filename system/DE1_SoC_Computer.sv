@@ -471,10 +471,6 @@ Computer_System The_System (
 
    // LEDs
    .leds_export                        (leds_export),
-   
-   // IrDA
-   //.irda_RXD                         (IRDA_RXD),
-   //.irda_TXD                         (IRDA_TXD),
 
    // SDRAM
    .sdram_clk_clk                      (DRAM_CLK),
@@ -587,19 +583,9 @@ Computer_System The_System (
    .hps_io_hps_io_usb1_inst_DIR     (HPS_USB_DIR),
    .hps_io_hps_io_usb1_inst_NXT     (HPS_USB_NXT),
    
-   // exports
-   //.sdr_clk_clk(sdr_clk),
-   //.sdr_readstart_export(sdr_readstart),
-   //.sdr_readdata_export(sdr_readdata),
-   //.sdr_readoff_export(sdr_readoff),
-   //.sdr_readdatavalid_export(sdr_readdatavalid),
-   //.sdr_readend_export(sdr_readend),
-   //.sdr_writestart_export(sdr_writestart),
-   //.sdr_writedata_export(sdr_writedata),
-   //.sdr_writeend_export(sdr_writeend),
-   //.sdr_finaladdr_export(sdr_finaladdr),
-   //.sdr_writtendata_export(sdr_writtendata)
-   .start_rt_export      (start_rt),
+   
+	.sdr_clk_clk          (sdr_clk),
+   .sdr_reset_export     (sdr_reset),
    .sdr_baseaddr_export  (sdr_baseaddr),
    .sdr_nelems_export    (sdr_nelems),
    .sdr_readdata_export  (sdr_readdata),
@@ -608,9 +594,7 @@ Computer_System The_System (
    .sdr_writedata_export (sdr_writedata),
    .sdr_writeend_export  (sdr_writeend),
    .sdr_writestart_export(sdr_writestart),
-   
-   .sdr_reset_export(sdr_reset),
-   .sdr_clk_clk(sdr_clk)
+	.start_rt_export      (start_rt)
 );
 
 

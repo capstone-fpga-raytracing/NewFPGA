@@ -28,14 +28,10 @@ module avalon_sdr
    input  logic sdr_readstart,
    output logic sdr_readend,
    input  logic sdr_writestart,
-   output logic sdr_writeend,
-   
-   output logic sdr_clk,
-   output logic sdr_reset
+   output logic sdr_writeend
 );
 
-assign sdr_clk = clk;
-assign sdr_reset = reset;
+assign avm_m0_byteenable = 2'd3;
 
 logic [30:0] max_offset;
 assign max_offset = 2*sdr_nelems - 1;
@@ -55,8 +51,6 @@ always_ff @(posedge clk) begin
    else cur_state <= next_state;
 end
 
-assign avm_m0_byteenable = 2'd3;
-
 reg [30:0] offset;
 reg offset_en;
 
@@ -68,11 +62,14 @@ always_ff @(posedge clk) begin
    else offset <= offset;
 end
 
+wire [31:0] offset_addr;
+assign offset_addr = sdr_baseaddr + (2*offset);
+
 reg readdata_en;
 reg [32*MAX_NREAD-1:0] readdata;
 
 always_ff @(posedge clk) begin
-   if (reset)
+   if (reset || (cur_state == INIT))
       readdata <= 'b0;
    else if (readdata_en)
       readdata[16*offset +: 16] <= avm_m0_readdata;
@@ -81,14 +78,12 @@ end
 
 assign sdr_readdata = readdata;
 
-wire [31:0] offset_addr;
-assign offset_addr = sdr_baseaddr + (2*offset);
-
 always @* begin
    avm_m0_write <= 1'b0;
    avm_m0_read <= 1'b0;
    avm_m0_address <= 32'd0;
    avm_m0_writedata <= 1'b0;
+	
    offset_en <= 1'b0;
    readdata_en <= 1'b0;
    
