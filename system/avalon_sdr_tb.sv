@@ -28,12 +28,13 @@ module avalon_sdr_tb;
     logic clk, reset;
     //logic trigger;
     logic [15:0] avm_m0_readdata;
-    //logic avm_m0_readdatavalid;
+    logic avm_m0_readdatavalid;
     logic avm_m0_waitrequest;
+    logic [31:0] avm_m0_address;
+    logic avm_m0_read;
     //logic [14:0] sdr_readdata;
     //logic sdr_readdatavalid, sdr_readend;
 	 //logic [4:0] sdr_readoff;
-    //logic avm_m0_read;
 
     // logic [223:0] sdr_writedata;
     // initial begin
@@ -54,13 +55,14 @@ logic sdr_readstart;
         .clk(clk),
         .reset(reset),
         .sdr_readstart(sdr_readstart),
+        .avm_m0_read(avm_m0_read),
+        .avm_m0_address(avm_m0_address),
         .avm_m0_readdata(avm_m0_readdata),
-        //.avm_m0_readdatavalid(avm_m0_readdatavalid),
+        .avm_m0_readdatavalid(avm_m0_readdatavalid),
         .avm_m0_waitrequest(avm_m0_waitrequest),
         .sdr_baseaddr(sdr_baseaddr),
         .sdr_nelems(sdr_nelems),
         .sdr_readdata(sdr_readdata),
-		  //.sdr_readdatavalid(sdr_readdatavalid),
 		.sdr_readend(sdr_readend)
 		  //.sdr_readoff(sdr_readoff),
         //.avm_m0_read(avm_m0_read)
@@ -105,68 +107,79 @@ logic sdr_readstart;
 //    end
 // end
 
-logic [9:0] raytest_addr;
+wire sdr_clk;
+wire sdr_reset;
 
-//logic sdr_reset;
-reg sdr_readend_reg;
-reg start_rt_reg;
-
-always @(posedge clk)
-begin
-   if (reset) begin
-		sdr_readend_reg <= 1'b0;
-   end
-	else if (sdr_readend)
-		sdr_readend_reg <= 1'b1;
-	else
-		sdr_readend_reg <= sdr_readend_reg;
-	
-	if (reset) 
-		start_rt_reg <= 1'b0;
-	else if (start_rt)
-		start_rt_reg <= 1'b1;
-	else
-		start_rt_reg <= start_rt_reg;
-end
+assign sdr_clk = clk;
+assign sdr_reset = reset;
 
 logic [2047:0] raydata;
 assign raydata = sdr_readdata;
 
-always @(posedge clk)
-begin
+localparam READINIT = 3'd0,
+           READSTART = 3'd1,
+           READ_ASSERT = 3'd2,
+           READ_DONE = 3'd3;
 
-sdr_readstart <= 1'b0;
-sdr_baseaddr <= 'b0;
-sdr_nelems <= 'b0;
-//raydata <= 'b0;
+logic [2:0] cur_state, next_state;
 
-if (start_rt_reg && !sdr_readend_reg && !sdr_readend) 
-  begin
-		sdr_baseaddr <= 32'd0;
-		sdr_nelems <= 30'd2;
-		sdr_readstart <= 1'b1;
-  end
+always_ff @(posedge sdr_clk) begin
+   if (sdr_reset) cur_state <= READINIT;
+   else cur_state <= next_state;
 end
 
-logic raytest, raytest_clk;
+reg rddone;
+     
+always @*
+begin
+   rddone <= 1'b0;
+   sdr_readstart <= 1'b0;
+   sdr_baseaddr <= 'hDEAD;
+   sdr_nelems <= 'd0;
 
+   case(cur_state)
+      READINIT:
+         next_state <= start_rt ? READSTART : READINIT;
+         
+      READSTART: begin
+         sdr_readstart <= 1'b1;
+         next_state <= READ_ASSERT;
+      end
+      
+      READ_ASSERT: begin
+         sdr_baseaddr <= 'b0;
+         sdr_nelems <= 30'd2;
+         rddone <= sdr_readend;
+         next_state <= sdr_readend ? READ_DONE : READ_ASSERT;
+      end
+      
+      READ_DONE: begin
+         rddone <= 1'b1;
+         next_state <= READ_DONE;
+      end
+   endcase
+
+end
+
+
+logic raytest, raytest_clk;
+logic [9:0] raytest_addr;
 logic [31:0] raytest_data;
 
-//initial raytest_addr = 10'd0;
-assign raytest = sdr_readend_reg;
+assign raytest = rddone;
 
 rate_divider rd ( clk, raytest_clk);
 
-always_ff @(posedge raytest_clk or posedge reset) 
+always_ff @(posedge raytest_clk or posedge sdr_reset) 
 begin
-   if(reset) begin
-    raytest_addr <= 'b0;
-   end
-   else if (raytest_clk) begin
-    if (raytest && raytest_addr != 10'd2) begin    
-            raytest_data <= raydata[32*raytest_addr +: 32];
-            raytest_addr <= raytest_addr + 10'd1;
-    end
+   if (sdr_reset) begin
+      raytest_addr <= 10'd0;
+      raytest_data <= 32'hDEAD;
+   end else if (raytest_clk) begin
+      if (raytest && raytest_addr != 10'd2) begin    
+           raytest_data <= raydata[32*raytest_addr +: 32];
+           raytest_addr <= raytest_addr + 10'd1;
+      end
    end
 end
 
@@ -182,38 +195,51 @@ end
         reset = 1;
         //trigger = 0;
         //avm_m0_readdata = 0;
-        //avm_m0_readdatavalid = 0;
+        avm_m0_readdatavalid = 0;
         avm_m0_waitrequest = 0;
         //sdr_writestart = 0;
 
-        
-
-        // Reset the DUT
-        #20 reset = 0; // Release reset after 100 ns
+        #20 reset = 0;
 
         #5 start_rt = 1;
-        #5 avm_m0_waitrequest = 1;
-        //#5 sdr_readstart = 0;
-
-        #20 avm_m0_waitrequest = 0;
+        #20 avm_m0_waitrequest = 1;
+        #10 avm_m0_waitrequest = 0;
+        
+        #20 avm_m0_waitrequest = 1;
         avm_m0_readdata = 20;
-        #10 avm_m0_waitrequest = 1;
-		  avm_m0_readdata = 16'hDEAD;
+        avm_m0_readdatavalid = 1;
 
-        #20 avm_m0_waitrequest = 0;
+        #10 avm_m0_waitrequest = 0;
+        avm_m0_readdatavalid = 0;
+		avm_m0_readdata = 16'hDEAD; // nonsense
+
+        #10 avm_m0_waitrequest = 1;
+        #10 avm_m0_waitrequest = 0;
+
+        #10 avm_m0_readdatavalid = 1;
         avm_m0_readdata = 30;
-        #10 avm_m0_waitrequest = 1;
-		  avm_m0_readdata = 16'hDEAD;
+        #10 avm_m0_readdata = 40;
+        #10 avm_m0_readdatavalid = 0;
+        avm_m0_readdata = 16'hDEAD; // nonsense
 
-        #20 avm_m0_waitrequest = 0;
-        avm_m0_readdata = 40;
-        #10 avm_m0_waitrequest = 1;
-		  avm_m0_readdata = 16'hDEAD;
-
-        #20 avm_m0_waitrequest = 0;
+        #20 avm_m0_readdatavalid = 1;
         avm_m0_readdata = 50;
-        #10 avm_m0_waitrequest = 1;
-		  avm_m0_readdata = 16'hDEAD;
+        #10 avm_m0_readdatavalid = 0;
+        avm_m0_readdata = 16'hDEAD; // nonsense
+
+        // avm_m0_readdata = 30;
+        // #10 avm_m0_waitrequest = 1;
+		//   avm_m0_readdata = 16'hDEAD;
+
+        // #20 avm_m0_waitrequest = 0;
+        // avm_m0_readdata = 40;
+        // #10 avm_m0_waitrequest = 1;
+		//   avm_m0_readdata = 16'hDEAD;
+
+        // #20 avm_m0_waitrequest = 0;
+        // avm_m0_readdata = 50;
+        // #10 avm_m0_waitrequest = 1;
+		//   avm_m0_readdata = 16'hDEAD;
 
         /*
         #10 trigger = 1;
