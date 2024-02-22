@@ -6,10 +6,19 @@ int32_t fip_mult(int32_t x, int32_t y) {
     return (int32_t)(temp_res >> 16);
 }
 
+#pragma FUNC_BLACKBOX do_div
+int32_t do_div(int48_t x, int32_t y) 
+{
+__vhdl__("\
+  begin \n\
+  return_output <= x / y; \n\
+");
+}
+
 int32_t fip_div(int32_t x, int32_t y) {
-    int64_t temp_dividend = (int64_t)x << 16;
-    int64_t temp_res = temp_dividend / y;
-    return (int32_t)temp_res;
+    int48_t temp_dividend = (int48_t)x << 16;
+    int32_t temp_res = do_div(temp_dividend, y);
+    return temp_res;
 }
 
 // saturate (i.e. limit to fip bounds).
@@ -28,9 +37,9 @@ int32_t fip_sat(int64_t val)
 
 int32_t fip_sat_div(int32_t x, int32_t y)
 {
-    int64_t temp = (int64_t)x << 16;
-    int64_t res = temp / y;
-    return fip_sat(res);
+    int48_t temp_dividend = (int48_t)x << 16;
+    int32_t temp_res = do_div(temp_dividend, y);
+    return fip_sat(temp_res);
 }
 
 int32_t fip_sat_mult(int32_t x, int32_t y) 

@@ -76,32 +76,32 @@ ritri_out ray_intersect_tri(Triangle_t tri, Ray_t ray)
     out_st.flag = 0;
 
     // Calculate the determinants directly with the provided values
-    int32_t det_coeffs = 2;//fip_det(
-    //     tri.v2[0] - tri.v1[0], tri.v2[1] - tri.v1[1], tri.v2[2] - tri.v1[2], // sys[0]
-    //     tri.v3[0] - tri.v1[0], tri.v3[1] - tri.v1[1], tri.v3[2] - tri.v1[2], // sys[1]
-    //     -ray.dir[0], -ray.dir[1], -ray.dir[2] // sys[2]
-    // );
+    int32_t det_coeffs = fip_det(
+        tri.v2[0] - tri.v1[0], tri.v2[1] - tri.v1[1], tri.v2[2] - tri.v1[2], // sys[0]
+        tri.v3[0] - tri.v1[0], tri.v3[1] - tri.v1[1], tri.v3[2] - tri.v1[2], // sys[1]
+        -ray.dir[0], -ray.dir[1], -ray.dir[2] // sys[2]
+    );
 
     if (det_coeffs == 0) { // no unique solution (very unlikely)
         out_st.flag = 0;
     } else {
-        int32_t a = 5;//fip_det(
-        //     ray.origin[0] - tri.v1[0], ray.origin[1] - tri.v1[1], ray.origin[2] - tri.v1[2], // sys[3] as first vector
-        //     tri.v3[0] - tri.v1[0], tri.v3[1] - tri.v1[1], tri.v3[2] - tri.v1[2], // sys[1]
-        //     -ray.dir[0], -ray.dir[1], -ray.dir[2] // sys[2]
-        // );
+        int32_t a = fip_sat_div(fip_det(
+            ray.origin[0] - tri.v1[0], ray.origin[1] - tri.v1[1], ray.origin[2] - tri.v1[2], // sys[3] as first vector
+            tri.v3[0] - tri.v1[0], tri.v3[1] - tri.v1[1], tri.v3[2] - tri.v1[2], // sys[1]
+            -ray.dir[0], -ray.dir[1], -ray.dir[2] // sys[2]
+        ), det_coeffs);
 
-        int32_t b = 6;//fip_det(
-        //     tri.v2[0] - tri.v1[0], tri.v2[1] - tri.v1[1], tri.v2[2] - tri.v1[2], // sys[0]
-        //     ray.origin[0] - tri.v1[0], ray.origin[1] - tri.v1[1], ray.origin[2] - tri.v1[2], // sys[3] as second vector
-        //     -ray.dir[0], -ray.dir[1], -ray.dir[2] // sys[2]
-        // );
+        int32_t b = fip_sat_div(fip_det(
+            tri.v2[0] - tri.v1[0], tri.v2[1] - tri.v1[1], tri.v2[2] - tri.v1[2], // sys[0]
+            ray.origin[0] - tri.v1[0], ray.origin[1] - tri.v1[1], ray.origin[2] - tri.v1[2], // sys[3] as second vector
+            -ray.dir[0], -ray.dir[1], -ray.dir[2] // sys[2]
+        ), det_coeffs);
 
-        int32_t t = 2; //fip_det(
-        //     tri.v2[0] - tri.v1[0], tri.v2[1] - tri.v1[1], tri.v2[2] - tri.v1[2], // sys[0]
-        //     tri.v3[0] - tri.v1[0], tri.  v3[1] - tri.v1[1], tri.v3[2] - tri.v1[2], // sys[1]
-        //     ray.origin[0] - tri.v1[0], ray.origin[1] - tri.v1[1], ray.origin[2] - tri.v1[2] // sys[3] as third vector
-        // );
+        int32_t t = fip_sat_div(fip_det(
+            tri.v2[0] - tri.v1[0], tri.v2[1] - tri.v1[1], tri.v2[2] - tri.v1[2], // sys[0]
+            tri.v3[0] - tri.v1[0], tri.v3[1] - tri.v1[1], tri.v3[2] - tri.v1[2], // sys[1]
+            ray.origin[0] - tri.v1[0], ray.origin[1] - tri.v1[1], ray.origin[2] - tri.v1[2] // sys[3] as third vector
+        ), det_coeffs);
 
         int32_t res = fip_sat_add(a, b);
         if (a >= 0 && b >= 0 && res <= FIP_ONE && t >= 0) {
