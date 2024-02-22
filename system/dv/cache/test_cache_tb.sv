@@ -79,6 +79,10 @@ module cache_ro_tb();
         test(0, 'd5, 'h0);
         test(1, 'd0, 'he);
         test(0, 'd0, 'h0);
+        test(1, 'd32, 'h8);
+        test(0, 'd32, 'h0);
+        test(1, 'd64, 'h7);
+        test(0, 'd64, 'h0);
 
         // end
         $display("[%0d]Test ends. All %0d test(s) passed.", $time(), test_index);

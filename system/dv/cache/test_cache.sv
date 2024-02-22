@@ -57,8 +57,8 @@ module cache_ro #(
         if (i_en) begin
             if (i_wrt) begin: parse_write
                 for (int way = 0; way < WAY; way += 1) begin: find_not_exist
-                    if (tag [i_addr[BIT_INDEX-1:0]][selected_way] == i_addr[BIT_TOTAL-1:BIT_INDEX] && 
-                        valid [i_addr[BIT_INDEX-1:0]][selected_way]) begin
+                    if (tag [i_addr[BIT_INDEX-1:0]][way] == i_addr[BIT_TOTAL-1:BIT_INDEX] && 
+                        valid [i_addr[BIT_INDEX-1:0]][way]) begin
                         exist = 1;
                     end
                 end
@@ -74,8 +74,6 @@ module cache_ro #(
                     for (int way = 0; way < WAY; way += 1) begin
                         if (!mru [i_addr[BIT_INDEX-1:0]][way]) begin
                             selected_way = way;
-                        end else begin
-                            mru_way = way;
                         end
                     end
                 end
@@ -84,8 +82,8 @@ module cache_ro #(
 
             end else begin: parse_read
                 for (int way = 0; way < WAY; way += 1) begin: find_exist
-                    if (tag [i_addr[BIT_INDEX-1:0]][selected_way] == i_addr[BIT_TOTAL-1:BIT_INDEX] && 
-                        valid [i_addr[BIT_INDEX-1:0]][selected_way]) begin
+                    if (tag [i_addr[BIT_INDEX-1:0]][way] == i_addr[BIT_TOTAL-1:BIT_INDEX] && 
+                        valid [i_addr[BIT_INDEX-1:0]][way]) begin
                         selected_way = way;
                         exist = 1;
                     end
@@ -113,18 +111,15 @@ module cache_ro #(
                     tag[i][j][BIT_TAG-1:0] <= 'b0;
                     valid[i][j] <= 0;
                     mru[i][j] <= 0;
-                    if (!j) mru[i][j] <= 1;
                 end
             end
         end else if (write) begin: do_write
             cache [i_addr[BIT_INDEX-1:0]][selected_way] <= i_data;
             tag [i_addr[BIT_INDEX-1:0]][selected_way] <= i_addr[BIT_TOTAL-1:BIT_INDEX];
-            mru [i_addr[BIT_INDEX-1:0]][mru_way] <= 0;
-            mru [i_addr[BIT_INDEX-1:0]][selected_way] <= 1;
             valid [i_addr[BIT_INDEX-1:0]][selected_way] <= 1;
             o_success <= 1;
         end else if (read) begin: do_read
-            mru [i_addr[BIT_INDEX-1:0]][mru_way] <= 0;
+            if (mru_way != selected_way) mru [i_addr[BIT_INDEX-1:0]][mru_way] <= 0;
             mru [i_addr[BIT_INDEX-1:0]][selected_way] <= 1;
             valid [i_addr[BIT_INDEX-1:0]][selected_way] <= 1;
             o_data <= cache [i_addr[BIT_INDEX-1:0]][selected_way];
@@ -134,7 +129,7 @@ module cache_ro #(
 
 endmodule: cache_ro
 
-
+/*
 module cache_controller #(
     
 )(
@@ -143,3 +138,4 @@ module cache_controller #(
 
 
 endmodule: cache_controller
+*/
