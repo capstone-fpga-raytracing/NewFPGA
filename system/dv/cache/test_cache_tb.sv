@@ -3,8 +3,8 @@
 module cache_ro_tb();
     localparam SIZE_BLOCK = 32; // block size, in bits
     localparam BIT_TOTAL = 24; // addr length, MAX_INDEX = 1 << BIT_TOTAL
-    localparam BIT_INDEX = 8; // index length
-    localparam WAY = 1; // # block in a set (set-associate)
+    localparam BIT_INDEX = 5; // index length
+    localparam WAY = 2; // # block in a set (set-associate)
 
     logic clk;
     always #10 clk = ~clk;
@@ -38,6 +38,7 @@ module cache_ro_tb();
         i_addr = dut_addr;
         i_data = dut_data;
         @(posedge clk);
+        #1;
         en = 0;
 
         if (o_success !== success) begin
@@ -48,6 +49,10 @@ module cache_ro_tb();
             $display("[%0d]Test %0d ERROR! Got o_data: %h from %h, should be %h", $time(), test_index, o_data, dut_addr, correct_data);
             error_flag = 1'b1;
         end
+        if (dut_wrt && o_data !== 'b0) begin
+            $display("[%0d]Test %0d ERROR! Got o_data: %h from %h, should be 0", $time(), test_index, o_data, dut_addr);
+            error_flag = 1'b1;
+        end
 
         /*if (error_flag) begin
             $stop();
@@ -56,26 +61,27 @@ module cache_ro_tb();
 
 
     initial begin
-        clk = 0;
+        clk = 1;
         rst = 1;
+        en = 0;
+        wrt = 0;
+        i_addr = 'b0;
+        i_data = 'b0;
         #100;
+        @(posedge clk);
         rst = 0;
 
-        test(1, 'd3, 'hf);
+        test(1, 'd3, 'ha);
         test(0, 'd3, 'h0);
-        test(1, 'd4, 'hf);
+        test(1, 'd4, 'hb);
         test(0, 'd4, 'h0);
-        test(1, 'd5, 'hf);
+        test(1, 'd5, 'hc);
         test(0, 'd5, 'h0);
-        test(1, 'd5, 'hd);
-        test(0, 'd5, 'h0);
-        test(1, 'd0, 'hd);
-        test(0, 'd0, 'h0);
-        test(1, 'd0, 'hc);
+        test(1, 'd0, 'he);
         test(0, 'd0, 'h0);
 
         // end
-        $display("All %0d test(s) passed!", test_index);
+        $display("[%0d]Test ends. All %0d test(s) passed.", $time(), test_index);
         $stop();
     end
 

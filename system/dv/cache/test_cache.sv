@@ -120,10 +120,12 @@ module cache_ro #(
             cache [i_addr[BIT_INDEX-1:0]][selected_way] <= i_data;
             tag [i_addr[BIT_INDEX-1:0]][selected_way] <= i_addr[BIT_TOTAL-1:BIT_INDEX];
             mru [i_addr[BIT_INDEX-1:0]][mru_way] <= 0;
+            mru [i_addr[BIT_INDEX-1:0]][selected_way] <= 1;
             valid [i_addr[BIT_INDEX-1:0]][selected_way] <= 1;
             o_success <= 1;
         end else if (read) begin: do_read
             mru [i_addr[BIT_INDEX-1:0]][mru_way] <= 0;
+            mru [i_addr[BIT_INDEX-1:0]][selected_way] <= 1;
             valid [i_addr[BIT_INDEX-1:0]][selected_way] <= 1;
             o_data <= cache [i_addr[BIT_INDEX-1:0]][selected_way];
             o_success <= 1;
