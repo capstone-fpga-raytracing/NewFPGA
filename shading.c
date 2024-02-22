@@ -4,7 +4,7 @@
 
 Vct_3d new_blinn_phong_shading(
     int32_t hit_tri_id,
-    Ray ray,
+    Ray_t ray,
     int32_t t, // hit distance
     int32_t num_lights,
     uint32_t lights_addr,

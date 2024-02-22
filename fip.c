@@ -50,29 +50,46 @@ uint32_t fip_sqrt(int32_t x) {
     return x+1;
 }
 
-int32_t fip_det(Vert vert) {
+// int32_t fip_det(Vct_3d_t v0, Vct_3d_t v1, Vct_3d_t v2) {
+//     /*
+//     |a b c| v0
+//     |d e f| v1
+//     |g h i| v2
+//     det = a(ei-fh) + b(fg-di) + c(dh-eg)
+//     */
+//     int32_t sub1, sub2, sub3;
+//     sub1 = fip_mult(v1.var[1], v2.var[2]) - fip_mult(v1.var[2], v2.var[1]);
+//     sub2 = fip_mult(v1.var[2], v2.var[0]) - fip_mult(v1.var[0], v2.var[2]);
+//     sub3 = fip_mult(v1.var[0], v2.var[1]) - fip_mult(v1.var[1], v2.var[0]);
+//     return fip_mult(v0.var[0], sub1) + fip_mult(v0.var[1], sub2) + fip_mult(v0.var[2], sub3);
+// }
+
+int32_t fip_det(int32_t v0x, int32_t v0y, int32_t v0z,
+                int32_t v1x, int32_t v1y, int32_t v1z,
+                int32_t v2x, int32_t v2y, int32_t v2z) {
     /*
-    |a b c| v0
-    |d e f| v1
-    |g h i| v2
+    |a b c| v0x, v0y, v0z
+    |d e f| v1x, v1y, v1z
+    |g h i| v2x, v2y, v2z
     det = a(ei-fh) + b(fg-di) + c(dh-eg)
     */
     int32_t sub1, sub2, sub3;
-    sub1 = fip_mult(vert.v1[1], vert.v2[2]) - fip_mult(vert.v1[2], vert.v2[1]);
-    sub2 = fip_mult(vert.v1[2], vert.v2[0]) - fip_mult(vert.v1[0], vert.v2[2]);
-    sub3 = fip_mult(vert.v1[0], vert.v2[1]) - fip_mult(vert.v1[1], vert.v2[0]);
-    return fip_mult(vert.v0[0], sub1) + fip_mult(vert.v0[1], sub2) + fip_mult(vert.v0[2], sub3);
+    sub1 = fip_mult(v1y, v2z) - fip_mult(v1z, v2y);
+    sub2 = fip_mult(v1z, v2x) - fip_mult(v1x, v2z);
+    sub3 = fip_mult(v1x, v2y) - fip_mult(v1y, v2x);
+    return fip_mult(v0x, sub1) + fip_mult(v0y, sub2) + fip_mult(v0z, sub3);
 }
 
-uint32_t fip_norm(Vct_3d vct) {
+
+uint32_t fip_norm(Vct_3d_t vct) {
     return fip_sqrt(fip_mult(vct.var[0], vct.var[0]) +
                     fip_mult(vct.var[1], vct.var[1]) +
                     fip_mult(vct.var[2], vct.var[2]));
 }
 
-Vct_3d fip_normalize(Vct_3d vct)
+Vct_3d_t fip_normalize(Vct_3d_t vct)
 {
-    Vct_3d normal;
+    Vct_3d_t normal;
 
     if (vct.var[0] == 0 && vct.var[1] == 0 && vct.var[2] == 0) {
         normal.var[0] = 0;

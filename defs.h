@@ -97,63 +97,52 @@ typedef struct avsdr_in2
 }
 avsdr_in2;
 
-
-
-typedef struct Ray
-{
-    int32_t origin[3];
-    int32_t dir[3];
-} Ray;
-typedef struct Triangle
+typedef struct Triangle_t
 {
     int32_t v1[3];
     int32_t v2[3];
     int32_t v3[3];
 
-} Triangle;
+} Triangle_t;
 // ray intersect tri out
-typedef struct ritri_out {
-	int32_t t;
-	uint1_t flag; // Intersect bool
-} ritri_out;
 
-typedef struct bv
+typedef struct bv_t
 {
     int32_t cmin[3];
     int32_t cmax[3];
     int32_t ntris;
-} bv;
+} bv_t;
 
 // 3d vector structs
 
 // 3x1
-typedef struct Vct_3d {
+typedef struct Vct_3d_t {
     int32_t var[3];
-} Vct_3d;
+} Vct_3d_t;
 
 // 3x2
-typedef struct Ray {
+typedef struct Ray_t {
     int32_t origin[3];
     int32_t dir[3];
-} Ray;
+} Ray_t;
 
-typedef struct Light {
+typedef struct Light_t {
     int32_t src[3];
     int32_t color[3];
-} Light;
+} Light_t;
 
 // 3x3
-typedef struct Vert {
+typedef struct Vert_t {
     int32_t v0[3];
     int32_t v1[3];
     int32_t v2[3];
-} Vert;
+} Vert_t;
 
-typedef struct Material {
+typedef struct Material_t {
     int32_t ka[3];
     int32_t kd[3];
     int32_t ks[3];
-} Material;
+} Material_t;
 
 // autogen, see wiki/Automatically-Generated-Functionality
 #include "bv_array_N_t.h"
