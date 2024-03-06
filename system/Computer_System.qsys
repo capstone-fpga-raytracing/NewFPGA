@@ -2746,6 +2746,13 @@
    kind="interrupt"
    version="18.1"
    start="ARM_A9_HPS.f2h_irq1"
+   end="avalon_sdr_0.interrupt_sender">
+  <parameter name="irqNumber" value="13" />
+ </connection>
+ <connection
+   kind="interrupt"
+   version="18.1"
+   start="ARM_A9_HPS.f2h_irq1"
    end="JTAG_UART_for_ARM_1.irq">
   <parameter name="irqNumber" value="8" />
  </connection>

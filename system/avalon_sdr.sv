@@ -28,7 +28,8 @@ module avalon_sdr
    input  logic sdr_readstart,
    output logic sdr_readend,
    input  logic sdr_writestart,
-   output logic sdr_writeend
+   output logic sdr_writeend,
+   output logic irq
 );
 
 assign avm_m0_byteenable = 2'd3;
@@ -93,6 +94,7 @@ always @* begin
    sdr_writeend <= 1'b0;
    sdr_readend <= 1'b0;
    offset_en <= 1'b0;
+   irq <= 1'b0;
    
    case (cur_state)
       INIT: 
@@ -141,6 +143,7 @@ always @* begin
 
       WRITE_DONE: begin
          sdr_writeend <= 1'b1;
+         irq <= 1'b1;
          next_state <= INIT;
       end
    endcase
