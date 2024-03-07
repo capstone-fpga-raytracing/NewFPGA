@@ -384,7 +384,7 @@ begin
    end
 end
 
-assign LEDR[0] = rddone;
+//assign LEDR[0] = rddone;
 
 
 //logic [31:0] sdr_finaladdr;
@@ -470,7 +470,7 @@ Computer_System The_System (
    .expansion_jp2_export               ({GPIO_1[35:19], GPIO_1[17], GPIO_1[15:3], GPIO_1[1]}),
 
    // LEDs
-   .leds_export                        (leds_export),
+   .leds_export                        (LEDR),
 
    // SDRAM
    .sdram_clk_clk                      (DRAM_CLK),

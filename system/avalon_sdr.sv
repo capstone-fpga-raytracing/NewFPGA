@@ -84,6 +84,20 @@ always_ff @(posedge clk) begin
    end
 end
 
+reg irq_en;
+reg irq_reg;
+always_ff @(posedge clk) begin
+	if (reset)
+		irq_reg <= 1'b0;
+	else if (irq_en)
+		irq_reg <= 1'b1;
+	else
+		irq_reg <= irq_reg;
+end
+
+
+assign irq = irq_reg;
+
 assign sdr_readdata = readdata;
 
 always @* begin
@@ -94,7 +108,7 @@ always @* begin
    sdr_writeend <= 1'b0;
    sdr_readend <= 1'b0;
    offset_en <= 1'b0;
-   irq <= 1'b0;
+   irq_en <= 1'b0;
    
    case (cur_state)
       INIT: 
@@ -138,12 +152,12 @@ always @* begin
 
       READ_DONE: begin
          sdr_readend <= 1'b1;
+         irq_en <= 1'b1;
          next_state <= INIT;
       end
 
       WRITE_DONE: begin
          sdr_writeend <= 1'b1;
-         irq <= 1'b1;
          next_state <= INIT;
       end
    endcase
