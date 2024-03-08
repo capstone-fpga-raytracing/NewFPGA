@@ -29,6 +29,8 @@ module avalon_sdr
    output logic sdr_readend,
    input  logic sdr_writestart,
    output logic sdr_writeend,
+   input  logic irq_serviced,
+   output logic [7:0] irq_serviced_data,
    output logic irq
 );
 
@@ -91,12 +93,15 @@ always_ff @(posedge clk) begin
 		irq_reg <= 1'b0;
 	else if (irq_en)
 		irq_reg <= 1'b1;
+   else if (irq_serviced)
+      irq_reg <= 1'b0;
 	else
 		irq_reg <= irq_reg;
 end
 
 
 assign irq = irq_reg;
+assign irq_serviced_data = 8'b11111111;
 
 assign sdr_readdata = readdata;
 
