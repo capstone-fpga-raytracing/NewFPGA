@@ -28,10 +28,7 @@ module avalon_sdr
    input  logic sdr_readstart,
    output logic sdr_readend,
    input  logic sdr_writestart,
-   output logic sdr_writeend,
-   input  logic irq_serviced,
-   output logic [7:0] irq_serviced_data,
-   output logic irq
+   output logic sdr_writeend
 );
 
 assign avm_m0_byteenable = 2'd3;
@@ -86,23 +83,6 @@ always_ff @(posedge clk) begin
    end
 end
 
-reg irq_en;
-reg irq_reg;
-always_ff @(posedge clk) begin
-	if (reset)
-		irq_reg <= 1'b0;
-	else if (irq_en)
-		irq_reg <= 1'b1;
-   else if (irq_serviced)
-      irq_reg <= 1'b0;
-	else
-		irq_reg <= irq_reg;
-end
-
-
-assign irq = irq_reg;
-assign irq_serviced_data = 8'b11111111;
-
 assign sdr_readdata = readdata;
 
 always @* begin
@@ -113,7 +93,6 @@ always @* begin
    sdr_writeend <= 1'b0;
    sdr_readend <= 1'b0;
    offset_en <= 1'b0;
-   irq_en <= 1'b0;
    
    case (cur_state)
       INIT: 
@@ -157,7 +136,6 @@ always @* begin
 
       READ_DONE: begin
          sdr_readend <= 1'b1;
-         irq_en <= 1'b1;
          next_state <= INIT;
       end
 

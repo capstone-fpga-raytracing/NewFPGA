@@ -314,6 +314,8 @@ output               HPS_USB_STP;
 wire sdr_clk;
 logic sdr_reset;
 
+
+
 logic [2047:0] raydata;
 assign raydata = sdr_readdata;
 
@@ -330,10 +332,15 @@ always_ff @(posedge sdr_clk) begin
 end
 
 reg rddone;
-     
+logic end_rt;
+logic [31:0] end_rtstat;
+assign end_rtstat = 32'd1;
+	  
+	  
 always @*
 begin
    rddone <= 1'b0;
+	end_rt <= 1'b0;
    sdr_readstart <= 1'b0;
    sdr_baseaddr <= 'hDEAD;
    sdr_nelems <= 'd0;
@@ -350,12 +357,13 @@ begin
       READ_ASSERT: begin
          sdr_baseaddr <= 'b0;
          sdr_nelems <= 30'd15;
-			rddone <= sdr_readend;
+         rddone <= sdr_readend;
          next_state <= sdr_readend ? READ_DONE : READ_ASSERT;
       end
       
       READ_DONE: begin
          rddone <= 1'b1;
+			end_rt <= 1'b1;
          next_state <= READ_DONE;
       end
    endcase
@@ -434,21 +442,6 @@ end
 
 
 
-
-//top_v rt(
-//   .clk100(CLOCK_50),
-//   .start(start_rt),
-//   .sdr_readend(sdr_readend),
-//   .sdr_writeend(sdr_writeend),
-//   .sdr_readdata(sdr_readdata),
-//   .sdr_readstart(sdr_readstart),
-//   .sdr_writestart(sdr_writestart),
-//   .sdr_baseaddr(sdr_baseaddr),
-//   .sdr_nelems(sdr_nelems),
-//   .sdr_writedata(sdr_writedata),
-//   .hex(hex0_bcd),
-//   .hex_valid(hex0_valid)
-//);
 
 
 
@@ -584,7 +577,7 @@ Computer_System The_System (
    .hps_io_hps_io_usb1_inst_NXT     (HPS_USB_NXT),
    
    
-	.sdr_clk_clk          (sdr_clk),
+   .sdr_clk_clk          (sdr_clk),
    .sdr_reset_export     (sdr_reset),
    .sdr_baseaddr_export  (sdr_baseaddr),
    .sdr_nelems_export    (sdr_nelems),
@@ -594,7 +587,9 @@ Computer_System The_System (
    .sdr_writedata_export (sdr_writedata),
    .sdr_writeend_export  (sdr_writeend),
    .sdr_writestart_export(sdr_writestart),
-	.start_rt_export      (start_rt)
+   .start_rt_export      (start_rt),
+   .end_rt_export        (end_rt),
+   .end_rtstat_export    (end_rtstat)
 );
 
 
