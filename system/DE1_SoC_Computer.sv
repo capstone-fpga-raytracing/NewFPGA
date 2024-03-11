@@ -333,8 +333,8 @@ end
 
 reg rddone;
 logic end_rt;
-logic [31:0] end_rtstat;
-assign end_rtstat = 32'd1;
+logic [7:0] end_rtstat;
+assign end_rtstat = 8'd1;
 	  
 	  
 always @*

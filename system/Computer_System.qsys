@@ -113,6 +113,14 @@
          type = "String";
       }
    }
+   element Computer_System
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
    element Expansion_JP1
    {
       datum _sortIndex
@@ -548,14 +556,6 @@
       datum baseAddress
       {
          value = "12368";
-         type = "String";
-      }
-   }
-   element avalon_control_0.s1
-   {
-      datum baseAddress
-      {
-         value = "12372";
          type = "String";
       }
    }
@@ -2384,15 +2384,6 @@
    end="Interval_Timer_2.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x2020" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="18.0"
-   start="ARM_A9_HPS.h2f_lw_axi_master"
-   end="avalon_control_0.s1">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x3054" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
