@@ -9,6 +9,7 @@ vlib work
 
 vlog ../fip_opts.sv
 vlog ../intersection.sv
+vlog ../shading.sv
 vlog ../cache.sv
 
 
@@ -18,6 +19,7 @@ vlog ../cache.sv
 
 vlog fip_opts_tb.sv
 vlog intersection_tb.sv
+# vlog shading_tb.sv
 vlog cache_tb.sv
 
 
@@ -33,6 +35,8 @@ vlog cache_tb.sv
 # vsim fip_32_vector_normal_tb
 
 vsim intersection_tb
+# vsim bp_shading_tb
+# vsim bp_shading_light_tb
 # vsim cache_ro_tb
 
 # log all signals

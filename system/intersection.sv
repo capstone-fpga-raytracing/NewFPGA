@@ -27,21 +27,10 @@ module intersection #(
     logic signed [31:0] e_t [0:2], t1 [0:2], t2 [0:2], _d [0:2];
 
     always_comb begin
-        e_t[0] = i_ray[0][0] - i_tri[0][0];
-        e_t[1] = i_ray[0][1] - i_tri[0][1];
-        e_t[2] = i_ray[0][2] - i_tri[0][2];
-
-        t1[0] = i_tri[1][0] - i_tri[0][0];
-        t1[1] = i_tri[1][1] - i_tri[0][1];
-        t1[2] = i_tri[1][2] - i_tri[0][2];
-
-        t2[0] = i_tri[2][0] - i_tri[0][0];
-        t2[1] = i_tri[2][1] - i_tri[0][1];
-        t2[2] = i_tri[2][2] - i_tri[0][2];
-
-        _d[0] = 32'b0 - i_ray[1][0];
-        _d[1] = 32'b0 - i_ray[1][1];
-        _d[2] = 32'b0 - i_ray[1][2];
+        e_t = '{i_ray[0][0] - i_tri[0][0], i_ray[0][1] - i_tri[0][1], i_ray[0][2] - i_tri[0][2]};
+        t1 = '{i_tri[1][0] - i_tri[0][0], i_tri[1][1] - i_tri[0][1], i_tri[1][2] - i_tri[0][2]};
+        t2 = '{i_tri[2][0] - i_tri[0][0], i_tri[2][1] - i_tri[0][1], i_tri[2][2] - i_tri[0][2]};
+        _d = '{32'b0 - i_ray[1][0], 32'b0 - i_ray[1][1], 32'b0 - i_ray[1][2]};
     end
 
     // stage1 reg
@@ -144,21 +133,10 @@ module bs_intersection #(
     logic signed [31:0] e_t [0:2], t1 [0:2], t2 [0:2], _d [0:2];
 
     always_comb begin
-        e_t[0] = i_ray[0][0] - i_tri[0][0];
-        e_t[1] = i_ray[0][1] - i_tri[0][1];
-        e_t[2] = i_ray[0][2] - i_tri[0][2];
-
-        t1[0] = i_tri[1][0] - i_tri[0][0];
-        t1[1] = i_tri[1][1] - i_tri[0][1];
-        t1[2] = i_tri[1][2] - i_tri[0][2];
-
-        t2[0] = i_tri[2][0] - i_tri[0][0];
-        t2[1] = i_tri[2][1] - i_tri[0][1];
-        t2[2] = i_tri[2][2] - i_tri[0][2];
-
-        _d[0] = 32'b0 - i_ray[1][0];
-        _d[1] = 32'b0 - i_ray[1][1];
-        _d[2] = 32'b0 - i_ray[1][2];
+        e_t = '{i_ray[0][0] - i_tri[0][0], i_ray[0][1] - i_tri[0][1], i_ray[0][2] - i_tri[0][2]};
+        t1 = '{i_tri[1][0] - i_tri[0][0], i_tri[1][1] - i_tri[0][1], i_tri[1][2] - i_tri[0][2]};
+        t2 = '{i_tri[2][0] - i_tri[0][0], i_tri[2][1] - i_tri[0][1], i_tri[2][2] - i_tri[0][2]};
+        _d = '{32'b0 - i_ray[1][0], 32'b0 - i_ray[1][1], 32'b0 - i_ray[1][2]};
     end
 
     // det
@@ -177,16 +155,6 @@ module bs_intersection #(
     fip_32_div #(.SAT(1)) div_a_inst (.i_x(det_a), .i_y(coef), .o_z(a));
     fip_32_div #(.SAT(1)) div_b_inst (.i_x(det_b), .i_y(coef), .o_z(b));
     fip_32_div #(.SAT(1)) div_t_inst (.i_x(det_t), .i_y(coef), .o_z(t));
-
-    // cross
-    //logic signed [31:0] cross_prod [0:2];
-    //fip_32_vector_cross cross_inst (.i_array('{t1, t2}), .o_prod(cross_prod));
-
-    // normal
-    //logic signed [31:0] normal [0:2];
-    //logic normal_drop; // not using pipeline
-    //fip_32_vector_normal normal_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en), .i_vector(cross_prod), 
-    //                                  .o_vector(normal), .o_valid(normal_drop));
 
     logic signed [31:0] anb;
     fip_32_add_sat add_sat_inst (.i_x(a), .i_y(b), .o_z(anb));

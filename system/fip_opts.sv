@@ -59,11 +59,11 @@ endmodule: fip_32_div
 /* unused
 module fip_32_vector_cross(
     input signed [31:0] i_array [0:1][0:2], // i_array[0] for vector 0
-    output logic signed [31:0] o_prod [0:2]
+    output logic signed [31:0] o_cross [0:2]
 );
     // i_array[0]: |a b c|
     // i_array[1]: |d e f|
-    // o_product = |bf-ce cd-af ae-bd|
+    // o_cross = |bf-ce cd-af ae-bd|
 
     logic signed [31:0] bf, ce, cd, af, ae, bd;
     fip_32_mult mult_bf_inst (.i_x(i_array[0][1]), .i_y(i_array[1][2]), .o_z(bf));
@@ -73,12 +73,29 @@ module fip_32_vector_cross(
     fip_32_mult mult_ae_inst (.i_x(i_array[0][0]), .i_y(i_array[1][1]), .o_z(ae));
     fip_32_mult mult_bd_inst (.i_x(i_array[0][1]), .i_y(i_array[1][0]), .o_z(bd));
 
-    assign o_prod[0] = bf - ce;
-    assign o_prod[1] = cd - af;
-    assign o_prod[2] = ae - bd;
+    assign o_cross = '{bf - ce, cd - af, ae - bd};
 
 endmodule: fip_32_vector_cross
 */
+
+module fip_32_vector_dot(
+    input signed [31:0] i_array [0:1][0:2], // i_array[0] for vector 0
+    output logic signed [31:0] o_dot
+);
+    // i_array[0]: |a b c|
+    // i_array[1]: |d e f|
+    // o_dot = a*d + b*e + c*f
+
+    logic signed [31:0] ad, be, cf;
+    fip_32_mult mult_ad_inst (.i_x(i_array[0][1]), .i_y(i_array[1][2]), .o_z(ad));
+    fip_32_mult mult_be_inst (.i_x(i_array[0][2]), .i_y(i_array[1][1]), .o_z(be));
+    fip_32_mult mult_cf_inst (.i_x(i_array[0][2]), .i_y(i_array[1][0]), .o_z(cf));
+
+    logic signed [31:0] sum1;
+    assign sum1 = ad + be;
+    assign o_dot = sum1 + cf;
+
+endmodule: fip_32_vector_dot
 
 module fip_32_sqrt #(
     parameter FRA_BITS = 16
@@ -129,9 +146,7 @@ module fip_32_3b3_det(
     fip_32_mult mult_eg_inst (.i_x(i_array[1][1]), .i_y(i_array[2][0]), .o_z(eg));
 
     logic signed [31:0] inter [0:2];
-    assign inter[0] = ei - fh;
-    assign inter[1] = fg - di;
-    assign inter[2] = dh - eg;
+    assign inter = '{ei - fh, fg - di, dh - eg};
 
     // stage1 reg
     logic signed [31:0] rout_inter [0:2];
