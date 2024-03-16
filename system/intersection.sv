@@ -1,6 +1,8 @@
 // intersection modules
 
 `define FIP_ONE 32'sh00010000
+`define FIP_MIN = 32'sh80000000;
+`define FIP_MAX = 32'sh7fffffff;
 
 
 // pipelined intersection
@@ -216,3 +218,48 @@ module dummy_intersection #(
     assign o_valid = 'b1;
 
 endmodule: dummy_intersection
+
+module ray_intersect_box#(
+    parameter SAT = 1,
+    parameter FRA_BITS = 16
+)(  
+    input i_clk,
+    input i_rstn,
+    input i_en,
+    input signed [0:1][0:2][31:0] i_ray, // i_ray[0] for origin(E), i_ray[1] for direction(D)
+    input signed [0:1][0:2][31:0] pbbox, // pbbox[0] for min, pbbox[1] for max
+);
+    logic [31:0] t_entry = FIP_MIN;
+    logic [31:0] t_exit = FIP_MAX;
+
+    wire signed [31:0] t_min[0:2];
+    wire signed [31:0] t_max[0:2];
+    
+    // Intermediate signals for division operation results
+    wire signed [31:0] div_results[0:5];
+
+    // Instantiate division modules for each axis and boundary
+    // Computing t_min and t_max for X-axis
+    fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_x_min(.i_x(pbbox[0][0] - i_ray[0][0]), .i_y(i_ray[1][0]), .o_z(div_results[0]));
+    fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_x_max(.i_x(pbbox[1][0] - i_ray[0][0]), .i_y(i_ray[1][0]), .o_z(div_results[1]));
+    
+    // Computing t_min and t_max for Y-axis
+    fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_y_min(.i_x(pbbox[0][1] - i_ray[0][1]), .i_y(i_ray[1][1]), .o_z(div_results[2]));
+    fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_y_max(.i_x(pbbox[1][1] - i_ray[0][1]), .i_y(i_ray[1][1]), .o_z(div_results[3]));
+
+    // Computing t_min and t_max for Z-axis
+    fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_z_min(.i_x(pbbox[0][2] - i_ray[0][2]), .i_y(i_ray[1][2]), .o_z(div_results[4]));
+    fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_z_max(.i_x(pbbox[1][2] - i_ray[0][2]), .i_y(i_ray[1][2]), .o_z(div_results[5]));
+
+    
+    always_comb begin
+    
+        t_entry = FIP_MAX;
+        t_exit = FIP_MIN;
+
+        if(ray)
+    end
+
+
+
+endmodule: ray_intersect_box
