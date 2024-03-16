@@ -1,3 +1,4 @@
+.vs/
 .vscode/
 build/
 
@@ -42,7 +43,6 @@ hps_sdram_p0_summary.csv
 *.sopc_builder
 *.summary
 *.tcl~
-*.txt
 *~
 *example*
 *sopc_*
