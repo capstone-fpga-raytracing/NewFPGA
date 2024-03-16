@@ -4,7 +4,7 @@ module cache_ro_tb();
     localparam SIZE_BLOCK = 32; // block size, in bits
     localparam BIT_TOTAL = 24; // addr length, MAX_INDEX = 1 << BIT_TOTAL
     localparam BIT_INDEX = 5; // index length
-    localparam WAY = 2; // # block in a set (set-associate)
+    localparam WAY = 3; // # block in a set (set-associate)
 
     logic clk;
     always #10 clk = ~clk;
@@ -79,10 +79,18 @@ module cache_ro_tb();
         test(0, 'd5, 'h0);
         test(1, 'd0, 'he);
         test(0, 'd0, 'h0);
-        test(1, 'd32, 'h8);
+        test(1, 'd32, 'h1);
         test(0, 'd32, 'h0);
-        test(1, 'd64, 'h7);
+        test(1, 'd64, 'h2);
         test(0, 'd64, 'h0);
+        test(1, 'd96, 'h3);
+        test(0, 'd96, 'h0);
+        test(1, 'd64, 'h2);
+        test(0, 'd64, 'h0);
+        test(1, 'd128, 'h4);
+        test(0, 'd128, 'h0);
+        test(1, 'd256, 'h8);
+        test(0, 'd256, 'h0);
 
         // end
         $display("[%0d]Test ends. All %0d test(s) passed.", $time(), test_index);
