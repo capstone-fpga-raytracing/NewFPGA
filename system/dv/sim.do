@@ -8,17 +8,17 @@ vlib work
 # vlog ../*.sv
 
 vlog ../fip_opts.sv
-vlog ../intersection.sv
-vlog ./cache.sv
+# vlog ../intersection.sv
+vlog ../cache.sv
 
 
 # compile testbench
 # === CHANGE HERE ===
 # vlog *.sv
 
-# vlog fip_opts_tb.sv
-vlog intersection_tb.sv
-# vlog ./cache_tb.sv
+vlog fip_opts_tb.sv
+# vlog intersection_tb.sv
+# vlog cache_tb.sv
 
 
 # load top level simulation module
@@ -27,11 +27,12 @@ vlog intersection_tb.sv
 # vsim fip_32_add_sat_tb
 # vsim fip_32_mult_tb
 # vsim fip_32_div_tb
-# vsim fip_32_3b3_det_tb
+# vsim fip_32_sqrt_tb
+vsim fip_32_3b3_det_tb
 # vsim fip_32_vector_cross_tb
 # vsim fip_32_vector_normal_tb
 
-vsim intersection_tb
+# vsim intersection_tb
 # vsim cache_ro_tb
 
 # log all signals
