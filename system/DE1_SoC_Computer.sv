@@ -335,12 +335,12 @@ reg rddone;
 logic end_rt;
 logic [7:0] end_rtstat;
 assign end_rtstat = 8'd1;
-	  
-	  
+     
+     
 always @*
 begin
    rddone <= 1'b0;
-	end_rt <= 1'b0;
+   end_rt <= 1'b0;
    sdr_readstart <= 1'b0;
    sdr_baseaddr <= 'hDEAD;
    sdr_nelems <= 'd0;
@@ -358,12 +358,12 @@ begin
          sdr_baseaddr <= 'b0;
          sdr_nelems <= 30'd15;
          rddone <= sdr_readend;
+         end_rt <= sdr_readend;
          next_state <= sdr_readend ? READ_DONE : READ_ASSERT;
       end
       
       READ_DONE: begin
          rddone <= 1'b1;
-			end_rt <= 1'b1;
          next_state <= READ_DONE;
       end
    endcase
