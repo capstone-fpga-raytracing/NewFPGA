@@ -1,8 +1,8 @@
 module intersection_tb();
 
     localparam signed min_t = 0;
-    logic signed [0:2][0:2][31:0] i_tri; // i_tri[0] for vertex 0
-    logic signed [0:1][0:2][31:0] i_ray; // i_ray[0] for origin(E), i_ray[1] for direction(D)
+    logic signed [31:0] i_tri [0:2][0:2]; // i_tri[0] for vertex 0
+    logic signed [31:0] i_ray [0:1][0:2]; // i_ray[0] for origin(E), i_ray[1] for direction(D)
     logic signed [31:0] o_t;
     logic o_result, o_valid;
     logic clk, rstn, en;

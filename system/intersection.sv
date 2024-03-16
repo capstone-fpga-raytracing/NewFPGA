@@ -3,15 +3,15 @@
 `define FIP_ONE 32'sh00010000
 
 
-// pipelined intersection
+// pipelined intersection, accepts new inputs every cycle
 module intersection #(
     parameter signed min_t = 0
 ) (
     input i_clk,
     input i_rstn,
     input i_en,
-    input signed [0:2][0:2][31:0] i_tri, // i_tri[0] for vertex 0
-    input signed [0:1][0:2][31:0] i_ray, // i_ray[0] for origin(E), i_ray[1] for direction(D)
+    input signed [31:0] i_tri [0:2][0:2], // i_tri[0]: vertex 0
+    input signed [31:0] i_ray [0:1][0:2], // i_ray[0]: origin(E), i_ray[1]: direction(D)
     output logic signed [31:0] o_t,
     output logic o_result,
     output logic o_valid // pipeline stage valid
@@ -24,7 +24,7 @@ module intersection #(
     logic i_valid; // submodule output
 
     // stage1: preprocess
-    logic signed [0:2][31:0] e_t, t1, t2, _d;
+    logic signed [31:0] e_t [0:2], t1 [0:2], t2 [0:2], _d [0:2];
 
     always_comb begin
         e_t[0] = i_ray[0][0] - i_tri[0][0];
@@ -45,19 +45,19 @@ module intersection #(
     end
 
     // stage1 reg
-    logic signed [0:2][31:0] rout_e_t, rout_t1, rout_t2, rout__d;
+    logic signed [31:0] rout_e_t [0:2], rout_t1 [0:2], rout_t2 [0:2], rout__d [0:2];
 
     // stage2 (multi): det
     logic signed [31:0] coef, det_a, det_b, det_t;
-    logic drop; // all 4 det modules are working parallelly, so keep only one o_valid
+    logic [0:2] drop; // all 4 det modules are working parallelly, so keep only one o_valid
     fip_32_3b3_det det_c_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
                                .i_array('{rout_t1, rout_t2, rout_e_t}), .o_det(coef), .o_valid(i_valid));
     fip_32_3b3_det det_a_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
-                               .i_array('{rout_e_t, rout_t2, rout__d}), .o_det(det_a), .o_valid(drop));
+                               .i_array('{rout_e_t, rout_t2, rout__d}), .o_det(det_a), .o_valid(drop[0]));
     fip_32_3b3_det det_b_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
-                               .i_array('{rout_t1, rout_e_t, rout__d}), .o_det(det_b), .o_valid(drop));
+                               .i_array('{rout_t1, rout_e_t, rout__d}), .o_det(det_b), .o_valid(drop[1]));
     fip_32_3b3_det det_t_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
-                               .i_array('{rout_t1, rout_t2, rout__d}), .o_det(det_t), .o_valid(drop));
+                               .i_array('{rout_t1, rout_t2, rout__d}), .o_det(det_t), .o_valid(drop[2]));
 
     // stage3: result
     logic signed [31:0] a, b, t;
@@ -69,7 +69,7 @@ module intersection #(
     logic result;
     always_comb begin
         result = 1'b0;
-        if (a[31] == 0 && b[31] == 0 && anb <= `FIP_ONE && t >= min_t) result = 1'b1;
+        if (coef != 0 && a[31] == 0 && b[31] == 0 && anb <= `FIP_ONE && t >= min_t) result = 1'b1;
     end
 
     // stage3 reg
@@ -79,10 +79,10 @@ module intersection #(
     // stage control
     always_ff@(posedge i_clk) begin: pipeline
         if (!i_rstn) begin
-            rout_e_t <= 'b0;
-            rout_t1 <= 'b0;
-            rout_t2 <= 'b0;
-            rout__d <= 'b0;
+            rout_e_t <= '{3{32'b0}};
+            rout_t1 <= '{3{32'b0}};
+            rout_t2 <= '{3{32'b0}};
+            rout__d <= '{3{32'b0}};
             rout_t <= 'b0;
             rout_result <= 'b0;
             valid <= 'b0;
@@ -113,14 +113,14 @@ endmodule: intersection
 module bs_intersection #(
     parameter signed min_t = 0
 ) (
-    input i_clk, // unused
-    input i_rstn, // unused
-    input i_en, // unused
-    input signed [0:2][0:2][31:0] i_tri, // i_tri[0] for vertex 0
-    input signed [0:1][0:2][31:0] i_ray, // i_ray[0] for origin(E), i_ray[1] for direction(D)
+    input i_clk,
+    input i_rstn,
+    input i_en,
+    input signed [31:0] i_tri [0:2][0:2], // i_tri[0]: vertex 0
+    input signed [31:0] i_ray [0:1][0:2], // i_ray[0]: origin(E), i_ray[1]: direction(D)
     output logic signed [31:0] o_t,
     output logic o_result,
-    output logic o_valid // punused
+    output logic o_valid // pipeline stage valid
 );
 
     /*
@@ -141,10 +141,7 @@ module bs_intersection #(
     */
 
     // preprocess
-    logic signed [0:2][31:0] e_t;
-    logic signed [0:2][31:0] t1;
-    logic signed [0:2][31:0] t2;
-    logic signed [0:2][31:0] _d;
+    logic signed [31:0] e_t [0:2], t1 [0:2], t2 [0:2], _d [0:2];
 
     always_comb begin
         e_t[0] = i_ray[0][0] - i_tri[0][0];
@@ -166,23 +163,30 @@ module bs_intersection #(
 
     // det
     logic signed [31:0] coef, det_a, det_b, det_t;
-    fip_32_3b3_det det_c_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en), .i_array('{t1, t2, e_t}), .o_det(coef));
-    fip_32_3b3_det det_a_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en), .i_array('{e_t, t2, _d}), .o_det(det_a));
-    fip_32_3b3_det det_b_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en), .i_array('{t1, e_t, _d}), .o_det(det_b));
-    fip_32_3b3_det det_t_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en), .i_array('{t1, t2, _d}), .o_det(det_t));
+    logic [0:3] drop; // not using pipeline
+    fip_32_3b3_det det_c_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
+                               .i_array('{t1, t2, e_t}), .o_det(coef), .o_valid(drop[0]));
+    fip_32_3b3_det det_a_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
+                               .i_array('{e_t, t2, _d}), .o_det(det_a), .o_valid(drop[1]));
+    fip_32_3b3_det det_b_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
+                               .i_array('{t1, e_t, _d}), .o_det(det_b), .o_valid(drop[2]));
+    fip_32_3b3_det det_t_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
+                               .i_array('{t1, t2, _d}), .o_det(det_t), .o_valid(drop[3]));
 
     logic signed [31:0] a, b, t;
     fip_32_div #(.SAT(1)) div_a_inst (.i_x(det_a), .i_y(coef), .o_z(a));
     fip_32_div #(.SAT(1)) div_b_inst (.i_x(det_b), .i_y(coef), .o_z(b));
     fip_32_div #(.SAT(1)) div_t_inst (.i_x(det_t), .i_y(coef), .o_z(t));
 
-    // normal
-    //logic signed [0:2][31:0] cross_prod, normal;
-    //fip_32_vector_cross cross_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en), .i_array('{t1, t2}), .o_prod(cross_prod));
+    // cross
+    //logic signed [31:0] cross_prod [0:2];
+    //fip_32_vector_cross cross_inst (.i_array('{t1, t2}), .o_prod(cross_prod));
 
-    // ignore normalize for now
-    //fip_32_vector_normal normal_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en), .i_vector(cross_prod), .o_vector(normal));
-    //assign normal = cross_prod;
+    // normal
+    //logic signed [31:0] normal [0:2];
+    //logic normal_drop; // not using pipeline
+    //fip_32_vector_normal normal_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en), .i_vector(cross_prod), 
+    //                                  .o_vector(normal), .o_valid(normal_drop));
 
     logic signed [31:0] anb;
     fip_32_add_sat add_sat_inst (.i_x(a), .i_y(b), .o_z(anb));
@@ -191,7 +195,7 @@ module bs_intersection #(
     always_comb begin
         o_t = t;
         o_result = 1'b0;
-        if (a[31] == 0 && b[31] == 0 && anb <= `FIP_ONE && t >= min_t) o_result = 1'b1;
+        if (coef != 0 && a[31] == 0 && b[31] == 0 && anb <= `FIP_ONE && t >= min_t) o_result = 1'b1;
     end
 
 endmodule: bs_intersection
@@ -204,8 +208,8 @@ module dummy_intersection #(
     input i_clk,
     input i_rstn,
     input i_en,
-    input signed [0:2][0:2][31:0] i_tri, // i_tri[0] for vertex 0
-    input signed [0:1][0:2][31:0] i_ray, // i_ray[0] for origin(E), i_ray[1] for direction(D)
+    input signed [31:0] i_tri [0:2][0:2], // i_tri[0]: vertex 0
+    input signed [31:0] i_ray [0:1][0:2], // i_ray[0]: origin(E), i_ray[1]: direction(D)
     output logic signed [31:0] o_t,
     output logic o_result,
     output logic o_valid // pipeline stage valid
