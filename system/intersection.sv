@@ -223,11 +223,9 @@ module ray_intersect_box#(
     parameter SAT = 1,
     parameter FRA_BITS = 16
 )(  
-    input i_clk,
-    input i_rstn,
-    input i_en,
-    input signed [0:1][0:2][31:0] i_ray, // i_ray[0] for origin(E), i_ray[1] for direction(D)
-    input signed [0:1][0:2][31:0] pbbox, // pbbox[0] for min, pbbox[1] for max
+    input signed [31:0] i_ray [0:1][0:2], // i_ray[0] for origin(E), i_ray[1] for direction(D)
+    input signed [31:0] pbbox [0:1][0:2], // pbbox[0] for min, pbbox[1] for max
+    output logic intersect
 );
     logic [31:0] t_entry = FIP_MIN;
     logic [31:0] t_exit = FIP_MAX;
@@ -257,9 +255,36 @@ module ray_intersect_box#(
         t_entry = FIP_MAX;
         t_exit = FIP_MIN;
 
-        if(ray)
+        // For each max min check, perform all comparisons
+
+        // X-axis check
+        if (i_ray[1][0] != 0) begin
+            t_entry = max(t_entry, min(t_min_x, t_max_x));
+            t_exit = min(t_exit, max(t_min_x, t_max_x));
+        end
+
+        // Y-axis check
+        if (i_ray[1][1] != 0) begin
+            t_entry = max(t_entry, min(t_min_y, t_max_y));
+            t_exit = min(t_exit, max(t_min_y, t_max_y));
+        end
+
+        // Z-axis check
+        if (i_ray[1][2] != 0) begin
+            t_entry = max(t_entry, min(t_min_z, t_max_z));
+            t_exit = min(t_exit, max(t_min_z, t_max_z));
+        end
+
+        intersect = (t_exit >= t_entry) && (t_entry >= 0);
     end
 
+    function signed [31:0] max(signed [31:0] a, signed [31:0] b);
+        max = a > b ? a : b;
+    endfunction
 
+    function signed [31:0] min(signed [31:0] a, signed [31:0] b);
+        min = a < b ? a : b;
+    endfunction
 
 endmodule: ray_intersect_box
+
