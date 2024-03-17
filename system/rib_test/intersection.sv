@@ -231,13 +231,9 @@ module ray_intersect_box#(
     localparam int FIP_MIN = 32'sh80000000;
     localparam int FIP_MAX = 32'sh7fffffff;
 
-
     logic [31:0] t_entry = FIP_MIN;
     logic [31:0] t_exit = FIP_MAX;
 
-    wire signed [31:0] t_min[0:2];
-    wire signed [31:0] t_max[0:2];
-    wire signed [31:0] t_min_x, t_max_x, t_min_y, t_max_y, t_min_z, t_max_z;
     // Intermediate signals for division operation results
     wire signed [31:0] div_results[0:5];
 
@@ -253,43 +249,41 @@ module ray_intersect_box#(
     // Computing t_min and t_max for Z-axis
     fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_z_min(.i_x(pbbox[0][2] - i_ray[0][2]), .i_y(i_ray[1][2]), .o_z(div_results[4]));
     fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_z_max(.i_x(pbbox[1][2] - i_ray[0][2]), .i_y(i_ray[1][2]), .o_z(div_results[5]));
-
     
     always_comb begin
-    
-        t_entry = FIP_MAX;
-        t_exit = FIP_MIN;
+        t_entry = FIP_MIN;
+        t_exit = FIP_MAX;
 
-        // For each max min check, perform all comparisons
-
-        // X-axis check
+        // Inline comparisons for X-axis
         if (i_ray[1][0] != 0) begin
-            t_entry = max(t_entry, min(t_min_x, t_max_x));
-            t_exit = min(t_exit, max(t_min_x, t_max_x));
+            t_entry = (div_results[0] > t_entry) ? div_results[0] : t_entry;
+            t_entry = (div_results[1] > t_entry) ? div_results[1] : t_entry;
+            
+            t_exit = (div_results[0] < t_exit) ? div_results[0] : t_exit;
+            t_exit = (div_results[1] < t_exit) ? div_results[1] : t_exit;
         end
 
-        // Y-axis check
+        // Inline comparisons for Y-axis
         if (i_ray[1][1] != 0) begin
-            t_entry = max(t_entry, min(t_min_y, t_max_y));
-            t_exit = min(t_exit, max(t_min_y, t_max_y));
+            t_entry = (div_results[2] > t_entry) ? div_results[2] : t_entry;
+            t_entry = (div_results[3] > t_entry) ? div_results[3] : t_entry;
+            
+            t_exit = (div_results[2] < t_exit) ? div_results[2] : t_exit;
+            t_exit = (div_results[3] < t_exit) ? div_results[3] : t_exit;
         end
 
-        // Z-axis check
+        // Inline comparisons for Z-axis
         if (i_ray[1][2] != 0) begin
-            t_entry = max(t_entry, min(t_min_z, t_max_z));
-            t_exit = min(t_exit, max(t_min_z, t_max_z));
+            t_entry = (div_results[4] > t_entry) ? div_results[4] : t_entry;
+            t_entry = (div_results[5] > t_entry) ? div_results[5] : t_entry;
+            
+            t_exit = (div_results[4] < t_exit) ? div_results[4] : t_exit;
+            t_exit = (div_results[5] < t_exit) ? div_results[5] : t_exit;
         end
 
         intersects = (t_exit >= t_entry) && (t_entry >= 0);
     end
 
-    function signed [31:0] max(signed [31:0] a, signed [31:0] b);
-        max = a > b ? a : b;
-    endfunction
+endmodule
 
-    function signed [31:0] min(signed [31:0] a, signed [31:0] b);
-        min = a < b ? a : b;
-    endfunction
-
-endmodule: ray_intersect_box
 
