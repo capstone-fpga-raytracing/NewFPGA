@@ -87,6 +87,39 @@ module intersection_tb();
         test();
         // expects result = 1, t = 180224 (2.75)
 
+        @(posedge clk);
+        i_tri[0] = '{'b0, 2 << 16, 'b0};
+        i_tri[1] = '{-2 << 16, -2 << 16, 'b0};
+        i_tri[2] = '{2 << 16, 2 << 16, 'b0};
+        i_ray[0] = '{'b0, 'b0, 1 << 16};
+        i_ray[1] = '{'b0, 'b0, -1 << 16};
+        test();
+        // expects result = 1, t = 65536 (1)
+
+        i_tri[0] = '{'b0, 2 << 16, 'b0};
+        i_tri[1] = '{-2 << 16, -2 << 16, 'b0};
+        i_tri[2] = '{2 << 16, -2 << 16, 'b0};
+        i_ray[0] = '{'b0, 'b0, 1 << 16};
+        i_ray[1] = '{'b0, 'b0, -1 << 16};
+        test();
+        // expects result = 1, t = 65536 (1)
+
+        i_tri[0] = '{'b0, 2 << 16, 'b0};
+        i_tri[1] = '{-2 << 16, 2 << 16, 'b0};
+        i_tri[2] = '{2 << 16, 2 << 16, 'b0};
+        i_ray[0] = '{'b0, 'b0, 1 << 16};
+        i_ray[1] = '{'b0, 'b0, -1 << 16};
+        test();
+        // expects result = 0, t = x (default in simulation of div by 0)
+
+
+        i_tri[0] = '{'b0, 2 << 16, 'b0};
+        i_tri[1] = '{-2 << 16, -2 << 16, 'b0};
+        i_tri[2] = '{2 << 16, -2 << 16, 'b0};
+        i_ray[0] = '{'b0, 'b0, 1 << 16};
+        i_ray[1] = '{'b0, 'b0, -1 << 16};
+        test();
+        // expects result = 1, t = 65536 (1)
 
         repeat(12) @(posedge clk);
         $display("[%0d]intersection: test end\n", $time());

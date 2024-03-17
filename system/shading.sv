@@ -16,8 +16,7 @@
 module bs_bp_shading #(
     parameter AMB = `FIP_AMB,
     parameter MAX_L = `MAX_LIGHT_SRC, // max light sources allowed
-
-    parameter LEN_L = $clog2(MAX_L) // light id length
+    localparam LEN_L = $clog2(MAX_L) // light id length
 )(
     input i_clk,
     input i_rstn,
