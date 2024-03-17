@@ -110,7 +110,25 @@ module reader_tb();
         i_ram_valid = 'b1;
         @(posedge clk);
         i_en = 'b0;
+
         // expect 0a0b in 0, 0102 in 1, 0304 in 2
+        i_idx= 'd0;
+        i_en = 'b1;
+        @(posedge clk);
+        i_en = 'b0;
+
+        i_idx= 'd2;
+        i_en = 'b1;
+        @(posedge clk);
+        i_en = 'b0;
+
+        i_idx= 'd3;
+        i_en = 'b1;
+        @(posedge clk);
+        i_en = 'b0;
+
+        repeat(3) @(posedge clk);
+        $stop
 
     end
 
