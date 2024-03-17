@@ -313,6 +313,7 @@ output               HPS_USB_STP;
 
 wire sdr_clk;
 logic sdr_reset;
+logic rd_reset;
 
 
 
@@ -332,6 +333,7 @@ always_ff @(posedge sdr_clk) begin
 end
 
 reg rddone;
+reg raytest_en;
 logic end_rt;
 logic [7:0] end_rtstat;
 assign end_rtstat = 8'd1;
@@ -344,6 +346,8 @@ begin
    sdr_readstart <= 1'b0;
    sdr_baseaddr <= 'hDEAD;
    sdr_nelems <= 'd0;
+	rd_reset <= 1'b0;
+	raytest_en <= 1'b0;
 
    case(cur_state)
       READINIT:
@@ -364,7 +368,9 @@ begin
       
       READ_DONE: begin
          rddone <= 1'b1;
-         next_state <= READ_DONE;
+			raytest_en <= 1'b1;
+			rd_reset <= 1'b1;
+         next_state <= READINIT;
       end
    endcase
 
@@ -375,13 +381,22 @@ logic raytest, raytest_clk;
 logic [9:0] raytest_addr;
 logic [31:0] raytest_data;
 
-assign raytest = rddone;
+always_ff @(posedge sdr_clk or posedge sdr_reset) begin
+   if (sdr_reset)
+      raytest = 1'b0;
+   else if (raytest_en)
+      raytest = 1'b1;
+   else raytest <= raytest;
+end
+
+
+//assign raytest = rddone;
 
 rate_divider rd ( CLOCK_50, raytest_clk);
 
-always_ff @(posedge raytest_clk or posedge sdr_reset) 
+always_ff @(posedge raytest_clk or posedge sdr_reset or posedge rd_reset) 
 begin
-   if (sdr_reset) begin
+   if (sdr_reset || rd_reset) begin
       raytest_addr <= 10'd0;
       raytest_data <= 32'hDEAD;
    end else if (raytest_clk) begin

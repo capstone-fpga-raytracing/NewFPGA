@@ -255,30 +255,58 @@ module ray_intersect_box#(
         t_exit = FIP_MAX;
 
         // Inline comparisons for X-axis
-        if (i_ray[1][0] != 0) begin
+        // if (i_ray[1][0] != 0) begin
+        //     t_entry = (div_results[0] > t_entry) ? div_results[0] : t_entry;
+        //     t_entry = (div_results[1] > t_entry) ? div_results[1] : t_entry;
+            
+        //     t_exit = (div_results[0] < t_exit) ? div_results[0] : t_exit;
+        //     t_exit = (div_results[1] < t_exit) ? div_results[1] : t_exit;
+        // end
+
+        // // Inline comparisons for Y-axis
+        // if (i_ray[1][1] != 0) begin
+        //     t_entry = (div_results[2] > t_entry) ? div_results[2] : t_entry;
+        //     t_entry = (div_results[3] > t_entry) ? div_results[3] : t_entry;
+            
+        //     t_exit = (div_results[2] < t_exit) ? div_results[2] : t_exit;
+        //     t_exit = (div_results[3] < t_exit) ? div_results[3] : t_exit;
+        // end
+
+        // // Inline comparisons for Z-axis
+        // if (i_ray[1][2] != 0) begin
+        //     t_entry = (div_results[4] > t_entry) ? div_results[4] : t_entry;
+        //     t_entry = (div_results[5] > t_entry) ? div_results[5] : t_entry;
+            
+        //     t_exit = (div_results[4] < t_exit) ? div_results[4] : t_exit;
+        //     t_exit = (div_results[5] < t_exit) ? div_results[5] : t_exit;
+        // end
+
+        // For i = 0
+        if(i_ray[1][0] > 0) begin
+            // set t_entry to be the max between itself and the result of the corresponding division
             t_entry = (div_results[0] > t_entry) ? div_results[0] : t_entry;
-            t_entry = (div_results[1] > t_entry) ? div_results[1] : t_entry;
-            
-            t_exit = (div_results[0] < t_exit) ? div_results[0] : t_exit;
             t_exit = (div_results[1] < t_exit) ? div_results[1] : t_exit;
+        end else begin
+            t_entry = (div_results[1] > t_entry) ? div_results[1] : t_entry;
+            t_exit = (div_results[0] < t_exit) ? div_results[0] : t_exit;
         end
 
-        // Inline comparisons for Y-axis
-        if (i_ray[1][1] != 0) begin
+        // For i = 1
+        if(i_ray[1][1] > 0) begin
             t_entry = (div_results[2] > t_entry) ? div_results[2] : t_entry;
-            t_entry = (div_results[3] > t_entry) ? div_results[3] : t_entry;
-            
-            t_exit = (div_results[2] < t_exit) ? div_results[2] : t_exit;
             t_exit = (div_results[3] < t_exit) ? div_results[3] : t_exit;
+        end else begin
+            t_entry = (div_results[3] > t_entry) ? div_results[3] : t_entry;
+            t_exit = (div_results[2] < t_exit) ? div_results[2] : t_exit;
         end
 
-        // Inline comparisons for Z-axis
-        if (i_ray[1][2] != 0) begin
+        // For i = 2
+        if(i_ray[1][2] > 0) begin
             t_entry = (div_results[4] > t_entry) ? div_results[4] : t_entry;
-            t_entry = (div_results[5] > t_entry) ? div_results[5] : t_entry;
-            
-            t_exit = (div_results[4] < t_exit) ? div_results[4] : t_exit;
             t_exit = (div_results[5] < t_exit) ? div_results[5] : t_exit;
+        end else begin
+            t_entry = (div_results[5] > t_entry) ? div_results[5] : t_entry;
+            t_exit = (div_results[4] < t_exit) ? div_results[4] : t_exit;
         end
 
         intersects = (t_exit >= t_entry) && (t_entry >= 0);

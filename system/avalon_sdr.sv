@@ -28,7 +28,8 @@ module avalon_sdr
    input  logic sdr_readstart,
    output logic sdr_readend,
    input  logic sdr_writestart,
-   output logic sdr_writeend
+   output logic sdr_writeend,
+   output logic [2:0] track_state
 );
 
 assign avm_m0_byteenable = 2'd3;
@@ -145,5 +146,7 @@ always @* begin
       end
    endcase
 end
+
+assign track_state = cur_state;
     
 endmodule
