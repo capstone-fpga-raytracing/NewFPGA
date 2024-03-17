@@ -1,8 +1,8 @@
 // intersection modules
 
 `define FIP_ONE 32'sh00010000
-`define FIP_MIN = 32'sh80000000;
-`define FIP_MAX = 32'sh7fffffff;
+`define FIP_MIN 32'sh80000000
+`define FIP_MAX 32'sh7fffffff
 
 
 // pipelined intersection
@@ -227,12 +227,17 @@ module ray_intersect_box#(
     input signed [31:0] pbbox [0:1][0:2], // pbbox[0] for min, pbbox[1] for max
     output logic intersects
 );
+
+    localparam int FIP_MIN = 32'sh80000000;
+    localparam int FIP_MAX = 32'sh7fffffff;
+
+
     logic [31:0] t_entry = FIP_MIN;
     logic [31:0] t_exit = FIP_MAX;
 
     wire signed [31:0] t_min[0:2];
     wire signed [31:0] t_max[0:2];
-    
+    wire signed [31:0] t_min_x, t_max_x, t_min_y, t_max_y, t_min_z, t_max_z;
     // Intermediate signals for division operation results
     wire signed [31:0] div_results[0:5];
 
