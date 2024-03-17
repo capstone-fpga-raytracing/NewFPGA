@@ -891,3 +891,7 @@ set_global_assignment -name QIP_FILE Computer_System/synthesis/Computer_System.q
 set_global_assignment -name VERILOG_FILE rateDivider.v
 set_global_assignment -name SYSTEMVERILOG_FILE hex_decoder.sv
 set_global_assignment -name SYSTEMVERILOG_FILE DE1_SoC_Computer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE cache.sv
+set_global_assignment -name SYSTEMVERILOG_FILE tri_reader.sv
+set_global_assignment -name SYSTEMVERILOG_FILE avalon_sdr.sv
+set_global_assignment -name SYSTEMVERILOG_FILE intersection.sv

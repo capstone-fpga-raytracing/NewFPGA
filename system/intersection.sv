@@ -6,6 +6,11 @@
 
 
 // pipelined intersection, accepts new inputs every cycle
+
+typedef logic signed [31:0] fip;
+
+
+// pipelined intersection
 module intersection #(
     parameter signed min_t = 0
 ) (
@@ -191,6 +196,7 @@ module dummy_intersection #(
 
 endmodule: dummy_intersection
 
+
 module ray_intersect_box#(
     parameter SAT = 1,
     parameter FRA_BITS = 16
@@ -260,3 +266,75 @@ module ray_intersect_box#(
 
 endmodule: ray_intersect_box
 
+
+// 
+// haha insect
+//module tri_insector
+//(
+//	input logic clk,
+//	input logic reset,
+//	
+//	// constant
+//	input logic [31:0] tris_baseaddr,
+//
+//	input logic [32*6-1:0] ray,
+//	input logic [31:0] tri_index,
+//	
+//	output logic hit,
+//	output logic signed [31:0] t,
+//	
+//	input logic ivalid,  // input valid, do not set unless input ready
+//	output logic iready, // input ready
+//	output logic ovalid, // output valid
+//	
+//	// AVMM interface
+//   output logic         avm_m0_read,
+//   output logic         avm_m0_write,
+//   output logic [15:0]  avm_m0_writedata,
+//   output logic [31:0]  avm_m0_address,
+//   input  logic [15:0]  avm_m0_readdata,
+//   input  logic         avm_m0_readdatavalid,
+//   output logic [1:0]   avm_m0_byteenable,
+//   input  logic         avm_m0_waitrequest
+//);
+//
+//wire [BLOCKSZ-1:0] raw_data;
+//
+//fip [0:2][0:2] rdtri;
+//genvar i, j;
+//generate 
+//	for (i=0; i<3; ++i) begin: cast0
+//		for (j=0; j<3; ++j) begin: cast1
+//			assign rdtri[i][j] = (fip)raw_data[(32*(3*i+j+1)-1 : 32*(3*i+j)];
+//		end
+//	end
+//endgenerate
+//
+//wire rddone;
+//
+//assign iready = rddone;
+//
+//tri_reader tri_read
+//(
+//	.clk(clk),
+//	.reset(reset),
+//	
+//	.avm_m0_read(avm_m0_read),
+//   .avm_m0_write(avm_m0_write),
+//   .avm_m0_writedata(avm_m0_writedata),
+//   .avm_m0_address(avm_m0_address),
+//   .avm_m0_readdata(avm_m0_readdata),
+//   .avm_m0_readdatavalid(avm_m0_readdatavalid),
+//   .avm_m0_byteenable(avm_m0_byteenable),
+//   .avm_m0_waitrequest(avm_m0_waitrequest),
+//	
+//	.baseaddr(tris_baseaddr),
+//	.index(tri_index),
+//	.read(ivalid),
+//	
+//	.data(raw_data),
+//	.done(rddone)
+//);
+//
+
+endmodule
