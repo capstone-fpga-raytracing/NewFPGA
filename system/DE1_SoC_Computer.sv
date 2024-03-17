@@ -320,15 +320,19 @@ logic rd_reset;
 logic [2047:0] raydata;
 assign raydata = sdr_readdata;
 
-localparam READINIT = 3'd0,
-           READSTART = 3'd1,
+localparam READ_INIT = 3'd0,
+           READ_START = 3'd1,
            READ_ASSERT = 3'd2,
-           READ_DONE = 3'd3;
+           READ_DONE = 3'd3,
+           WRITE_INIT = 3'd4,
+           WRITE_ASSERT = 3'd5,
+           WRITE_DONE = 3'd6;
+
 
 logic [2:0] cur_state, next_state;
 
 always_ff @(posedge sdr_clk) begin
-   if (sdr_reset) cur_state <= READINIT;
+   if (sdr_reset) cur_state <= READ_INIT;
    else cur_state <= next_state;
 end
 
@@ -337,23 +341,30 @@ reg raytest_en;
 logic end_rt;
 logic [7:0] end_rtstat;
 assign end_rtstat = 8'd1;
-     
+
+logic raytest, raytest_clk;
+logic [9:0] raytest_addr;
+logic [31:0] raytest_data;
      
 always @*
 begin
    rddone <= 1'b0;
    end_rt <= 1'b0;
    sdr_readstart <= 1'b0;
+   sdr_writestart <= 1'b0;
+   sdr_writedata <= 32'hBEEF;
    sdr_baseaddr <= 'hDEAD;
    sdr_nelems <= 'd0;
 	rd_reset <= 1'b0;
 	raytest_en <= 1'b0;
 
    case(cur_state)
-      READINIT:
-         next_state <= start_rt ? READSTART : READINIT;
-         
-      READSTART: begin
+      READ_INIT: begin
+         next_state <= start_rt ? READ_START : READ_INIT;
+         if (rt_done)
+            next_state <= WRITE_INIT;
+      end
+      READ_START: begin
          sdr_readstart <= 1'b1;
          next_state <= READ_ASSERT;
       end
@@ -368,18 +379,29 @@ begin
       
       READ_DONE: begin
          rddone <= 1'b1;
-			raytest_en <= 1'b1;
-			rd_reset <= 1'b1;
-         next_state <= READINIT;
+         raytest_en <= 1'b1;
+         rd_reset <= 1'b1;
+         next_state <= READ_INIT;
+      end
+
+      WRITE_INIT: begin
+         sdr_writestart <= 1'b1;
+         next_state <= WRITE_ASSERT;
+      end
+
+      WRITE_ASSERT: begin
+         sdr_baseaddr <= 'b0;
+         sdr_nelems <= 30'd1;
+         end_rt <= sdr_writeend;
+         next_state <= sdr_writeend ? WRITE_DONE : WRITE_ASSERT;
+      end
+
+      WRITE_DONE: begin
+         next_state <= READ_INIT;
       end
    endcase
 
 end
-
-
-logic raytest, raytest_clk;
-logic [9:0] raytest_addr;
-logic [31:0] raytest_data;
 
 always_ff @(posedge sdr_clk or posedge sdr_reset) begin
    if (sdr_reset)
@@ -389,7 +411,7 @@ always_ff @(posedge sdr_clk or posedge sdr_reset) begin
    else raytest <= raytest;
 end
 
-
+logic rt_done;
 //assign raytest = rddone;
 
 rate_divider rd ( CLOCK_50, raytest_clk);
@@ -399,10 +421,16 @@ begin
    if (sdr_reset || rd_reset) begin
       raytest_addr <= 10'd0;
       raytest_data <= 32'hDEAD;
+      // sdr_writestart <= 1'b0;
+      rt_done <= 1'b0;
    end else if (raytest_clk) begin
       if (raytest && raytest_addr != 10'd15) begin    
-           raytest_data <= raydata[32*raytest_addr +: 32];
-           raytest_addr <= raytest_addr + 10'd1;
+            raytest_data <= raydata[32*raytest_addr +: 32];
+            raytest_addr <= raytest_addr + 10'd1;
+         //   sdr_writestart <= 1'b0;
+            rt_done <= 1'b0;
+      end else if (raytest && raytest_addr == 10'd15) begin
+            rt_done <= 1'b1;            
       end
    end
 end
