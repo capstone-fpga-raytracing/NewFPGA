@@ -117,7 +117,7 @@ module cache_ro #(
             cache [i_addr[BIT_INDEX-1:0]][selected_way] <= i_data;
             tag [i_addr[BIT_INDEX-1:0]][selected_way] <= i_addr[BIT_TOTAL-1:BIT_INDEX];
             valid [i_addr[BIT_INDEX-1:0]][selected_way] <= 1;
-				o_data <= i_data; // reflect
+			o_data <= i_data; // reflect
             o_success <= 1;
         end else if (read) begin: do_read
             if (mru_way != selected_way) mru [i_addr[BIT_INDEX-1:0]][mru_way] <= 0;
@@ -129,4 +129,3 @@ module cache_ro #(
     end
 
 endmodule: cache_ro
-

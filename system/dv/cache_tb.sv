@@ -70,6 +70,7 @@ module cache_ro_tb();
         #100;
         @(posedge clk);
         rst = 0;
+        $display("TO DO: software cache yet to be implemented. all outputs are treated as errors");
 
         test(1, 'd3, 'ha);
         test(0, 'd3, 'h0);

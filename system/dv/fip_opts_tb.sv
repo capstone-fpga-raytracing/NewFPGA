@@ -159,8 +159,52 @@ module fip_32_div_tb();
 
 endmodule: fip_32_div_tb
 
+/* unused
+module fip_32_vector_cross_tb();
+    logic signed [31:0] i_array [0:1][0:2];
+    logic signed [31:0] o_cross [0:2];
+
+    fip_32_vector_cross dut (
+        .i_clk(1'b0),
+        .i_rstn(1'b1),
+        .i_en(1'b1),
+        .i_array(i_array),
+        .o_cross(o_cross)
+    );
+
+    initial begin
+        // TO DO: add test cases here
+    end
+
+endmodule: fip_32_vector_cross_tb
+*/
+
+module fip_32_vector_dot_tb();
+    logic signed [31:0] i_array [0:1][0:2];
+    logic signed [31:0] o_dot;
+
+    fip_32_vector_dot dut (
+        .i_array(i_array),
+        .o_dot(o_dot)
+    );
+
+    initial begin
+        // TO DO: add test cases here
+    end
+
+endmodule: fip_32_vector_dot_tb
+
+module fip_32_sqrt_tb();
+    // TO DO: add inst
+
+    initial begin
+        // TO DO: add test cases here
+    end
+
+endmodule: fip_32_sqrt_tb
+
 module fip_32_3b3_det_tb();
-    logic signed [0:2][0:2][31:0] i_array;
+    logic signed [31:0] i_array [0:2][0:2];
     logic signed [31:0] o_det;
     logic o_valid;
     logic clk, rstn, en;
@@ -242,28 +286,9 @@ module fip_32_3b3_det_tb();
 
 endmodule: fip_32_3b3_det_tb
 
-/* unused
-module fip_32_vector_cross_tb();
-    logic signed [0:1][0:2][31:0] i_array;
-    logic signed [0:2][31:0] o_prod;
-
-    fip_32_vector_cross dut (
-        .i_clk(1'b0),
-        .i_rstn(1'b1),
-        .i_en(1'b1),
-        .i_array(i_array),
-        .o_prod(o_prod)
-    );
-
-    initial begin
-        // TO DO: add test cases here
-    end
-
-endmodule: fip_32_vector_cross_tb
-
 module fip_32_vector_normal_tb();
-    logic signed [0:2][31:0] i_vector;
-    logic signed [0:2][31:0] o_vector;
+    logic signed [31:0] i_vector [0:2];
+    logic signed [31:0] o_vector [0:2];
 
     fip_32_vector_normal dut (
         .i_clk(1'b0),
@@ -278,4 +303,3 @@ module fip_32_vector_normal_tb();
     end
 
 endmodule: fip_32_vector_normal_tb
-*/
