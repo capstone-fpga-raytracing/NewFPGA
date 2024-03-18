@@ -7,6 +7,7 @@ vsim.wlf
 *.bak
 wlft4qw64q
 *.Identifier
+*.vstf
 
 *_sim
 *db/

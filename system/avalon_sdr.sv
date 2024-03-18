@@ -28,8 +28,7 @@ module avalon_sdr
    input  logic sdr_readstart,
    output logic sdr_readend,
    input  logic sdr_writestart,
-   output logic sdr_writeend,
-   output logic [2:0] track_state
+   output logic sdr_writeend
 );
 
 assign avm_m0_byteenable = 2'd3;
@@ -37,9 +36,7 @@ assign avm_m0_byteenable = 2'd3;
 localparam INIT = 3'd0,          
            WRITE_ASSERT = 3'd1,
            READ_ASSERT = 3'd2,
-           READ_WAIT = 3'd3,
-           READ_DONE = 3'd4,
-           WRITE_DONE = 3'd5;
+           READ_WAIT = 3'd3;
 
 logic [2:0] cur_state, next_state;
 
@@ -112,8 +109,10 @@ always @* begin
          avm_m0_writedata <= sdr_writedata[16*offset +: 16];
          offset_en <= !avm_m0_waitrequest;
          
-         if (!avm_m0_waitrequest && offset >= max_offset)
-            next_state <= WRITE_DONE;
+         if (!avm_m0_waitrequest && offset >= max_offset) begin
+            sdr_writeend <= 1'b1;
+            next_state <= INIT;
+         end
          else next_state <= WRITE_ASSERT;
       end
       
@@ -130,23 +129,13 @@ always @* begin
       
       READ_WAIT:
       begin
-         if (rdoffset > max_offset)
-            next_state <= READ_DONE;
+         if (rdoffset > max_offset) begin
+            sdr_readend <= 1'b1;
+            next_state <= INIT;
+         end
          else next_state <= READ_WAIT;           
-      end
-
-      READ_DONE: begin
-         sdr_readend <= 1'b1;
-         next_state <= INIT;
-      end
-
-      WRITE_DONE: begin
-         sdr_writeend <= 1'b1;
-         next_state <= INIT;
       end
    endcase
 end
-
-assign track_state = cur_state;
     
 endmodule

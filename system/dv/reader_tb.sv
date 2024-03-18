@@ -1,13 +1,13 @@
 module reader_tb();
-    localparameter NDWORDS = 1;
-    localparameter BLOCKSZ = 32*NDWORDS
+    localparam NDWORDS = 1;
+    localparam BLOCKSZ = 32*NDWORDS;
     logic clk, rst;
-    assign #5 clk = ~clk;
+    always #5 clk = ~clk;
     logic [31:0] i_baseaddr, i_idx;
     logic i_en;
 
     logic [BLOCKSZ-1:0] o_data;
-    logic o_valid, i_ready;
+    logic o_valid, o_ready;
 
     logic o_ram_rd, drop_wr;
     logic [15:0] drop_wrdata;
@@ -39,6 +39,28 @@ module reader_tb();
     );
 
     initial begin
+
+        repeat(15) @(posedge clk);
+        i_ram_data = 'h0001;
+        i_ram_valid = 'b1;
+        @(posedge clk);
+        i_ram_data = 'h0002;
+        i_ram_valid = 'b1;
+        @(posedge clk)
+        i_ram_valid = 1'b0;
+
+        repeat(14) @(posedge clk);
+        i_ram_data = 'h0003;
+        i_ram_valid = 'b1;
+        @(posedge clk);
+        i_ram_data = 'h0004;
+        i_ram_valid = 'b1;
+        @(posedge clk)
+        i_ram_valid = 1'b0;
+
+    end
+
+    initial begin
         clk = 'b1;
         rst = 'b1;
         i_en = 'b0;
@@ -57,15 +79,18 @@ module reader_tb();
         i_en = 'b1;
         @(posedge clk);
         i_en = 'b0;
-        @(posedge clk);
+        repeat (4) @(posedge clk);
         i_ram_data = 'h000a;
         i_ram_valid = 'b1;
         @(posedge clk);
         i_ram_data = 'h000b;
         i_ram_valid = 'b1;
         @(posedge clk);
+		  i_ram_valid = 'b0;
+		  $display("time: %0d", $time());
 
         // with pipeline
+        @(posedge clk);
         i_idx = 'd1;
         i_en = 'b1;
         @(posedge clk);
@@ -77,58 +102,48 @@ module reader_tb();
         i_en = 'b0;
 
         i_idx = 'd3;
-        i_en = 'b1;
         @(posedge clk);
-        i_en = 'b0;
 
         i_idx = 'd4;
         @(posedge clk);
-        i_en = 'b0;
 
         i_idx = 'd5;
-        i_en = 'b1;
-        i_ram_data = 'h0001;
-        i_ram_valid = 'b1;
         @(posedge clk);
-        i_en = 'b0;
 
         i_idx = 'd6;
-        i_en = 'b1;
-        i_ram_data = 'h0002;
-        i_ram_valid = 'b1;
         @(posedge clk);
-        i_en = 'b0;
+		  $display("time: %0d", $time());
 
-        i_idx = 'd7;
-        i_ram_data = 'h0003;
-        i_ram_valid = 'b1;
+        i_idx = 'd7;   
         @(posedge clk);
-        i_en = 'b0;
 
         i_idx = 'd8;
-        i_ram_data = 'h0004;
-        i_ram_valid = 'b1;
+        @(posedge clk);
+		  //i_ram_valid = 'b0;
+		  $display("time: %0d", $time());
+
+        // expect 0a0b in 0, 0102 in 1, 0304 in 2
+        repeat(13) @(posedge clk);
+        i_idx= 'd0;
+        //@(posedge o_ready);
+        i_en = 'b1;
         @(posedge clk);
         i_en = 'b0;
 
-        // expect 0a0b in 0, 0102 in 1, 0304 in 2
-        i_idx= 'd0;
+        i_idx= 'd1;
+       // @(posedge o_ready);
         i_en = 'b1;
         @(posedge clk);
         i_en = 'b0;
 
         i_idx= 'd2;
+        //@(posedge o_ready);
         i_en = 'b1;
         @(posedge clk);
         i_en = 'b0;
 
-        i_idx= 'd3;
-        i_en = 'b1;
-        @(posedge clk);
-        i_en = 'b0;
-
-        repeat(3) @(posedge clk);
-        $stop
+        repeat(20) @(posedge clk);
+        $stop;
 
     end
 

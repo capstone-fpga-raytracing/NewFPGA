@@ -9,8 +9,10 @@ vlib work
 
 vlog ../fip_opts.sv
 # vlog ../intersection.sv
-vlog ../shading.sv
+# vlog ../shading.sv
 vlog ../cache.sv
+vlog ../avalon_sdr.sv
+vlog ../tri_reader.sv
 
 
 # compile testbench
@@ -20,8 +22,8 @@ vlog ../cache.sv
 vlog fip_opts_tb.sv
 # vlog intersection_tb.sv
 # vlog shading_tb.sv
-vlog cache_tb.sv
-# vlog reader_tb.sv
+# vlog cache_tb.sv
+vlog reader_tb.sv
 
 
 # load top level simulation module
@@ -35,11 +37,11 @@ vlog cache_tb.sv
 # vsim fip_32_vector_cross_tb
 # vsim fip_32_vector_normal_tb
 
-vsim intersection_tb
+# vsim intersection_tb
 # vsim bp_shading_tb
 # vsim bp_shading_light_tb
 # vsim cache_ro_tb
-# vsim reader_tb
+vsim reader_tb
 
 # log all signals
 log {/*}
