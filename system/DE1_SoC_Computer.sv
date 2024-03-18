@@ -336,7 +336,6 @@ always_ff @(posedge sdr_clk) begin
    else cur_state <= next_state;
 end
 
-reg rddone;
 reg raytest_en;
 logic end_rt;
 logic [7:0] end_rtstat;
@@ -348,7 +347,6 @@ logic [31:0] raytest_data;
      
 always @*
 begin
-   rddone <= 1'b0;
    end_rt <= 1'b0;
    sdr_readstart <= 1'b0;
    sdr_writestart <= 1'b0;
@@ -360,9 +358,15 @@ begin
 
    case(cur_state)
       READ_INIT: begin
-         next_state <= start_rt ? READ_START : READ_INIT;
-         if (rt_done)
-            next_state <= WRITE_INIT;
+        next_state <= start_rt ? READ_START : READ_INIT;
+//         if (rt_done)
+//            next_state <= WRITE_INIT;
+			// if(start_rt && !rt_done)
+			// 	next_state <= READ_START;
+			// else if(rt_done && !start_rt)
+			// 	next_state <= WRITE_INIT;
+			// else
+			// 	next_state <= READ_INIT;
       end
       READ_START: begin
          sdr_readstart <= 1'b1;
@@ -372,16 +376,13 @@ begin
       READ_ASSERT: begin
          sdr_baseaddr <= 'b0;
          sdr_nelems <= 30'd15;
-         rddone <= sdr_readend;
+         //rddone <= sdr_readend;
          end_rt <= sdr_readend;
          next_state <= sdr_readend ? READ_DONE : READ_ASSERT;
       end
       
       READ_DONE: begin
-         rddone <= 1'b1;
-         raytest_en <= 1'b1;
-         rd_reset <= 1'b1;
-         next_state <= READ_INIT;
+         next_state <= WRITE_INIT;
       end
 
       WRITE_INIT: begin
@@ -397,45 +398,53 @@ begin
       end
 
       WRITE_DONE: begin
+         // rd_reset <= 1'b1;
+         // raytest_en <= 1'b1;
+         // rddone <= 1'b1;
+         // rt_done <= 1'b1;
+
          next_state <= READ_INIT;
       end
    endcase
 
 end
 
-always_ff @(posedge sdr_clk or posedge sdr_reset) begin
-   if (sdr_reset)
-      raytest = 1'b0;
-   else if (raytest_en)
-      raytest = 1'b1;
-   else raytest <= raytest;
-end
+// always_ff @(posedge sdr_clk or posedge sdr_reset) begin
+//    if (sdr_reset)
+//       raytest = 1'b0;
+//    else if (raytest_en)
+//       raytest = 1'b1;
+//    else raytest <= raytest;
+// end
 
 logic rt_done;
 //assign raytest = rddone;
 
 rate_divider rd ( CLOCK_50, raytest_clk);
 
-always_ff @(posedge raytest_clk or posedge sdr_reset or posedge rd_reset) 
-begin
-   if (sdr_reset || rd_reset) begin
-      raytest_addr <= 10'd0;
-      raytest_data <= 32'hDEAD;
-      // sdr_writestart <= 1'b0;
-      rt_done <= 1'b0;
-   end else if (raytest_clk) begin
-      if (raytest && raytest_addr != 10'd15) begin    
-            raytest_data <= raydata[32*raytest_addr +: 32];
-            raytest_addr <= raytest_addr + 10'd1;
-         //   sdr_writestart <= 1'b0;
-            rt_done <= 1'b0;
-      end else if (raytest && raytest_addr == 10'd15) begin
-            rt_done <= 1'b1;            
-      end
-   end
-end
+// always_ff @(posedge raytest_clk or posedge sdr_reset or posedge rd_reset) 
+// begin
+//    if (sdr_reset || rd_reset) begin
+//       raytest_addr <= 10'd0;
+//       raytest_data <= 32'hDEAD;
+//       // sdr_writestart <= 1'b0;
+//       rt_done <= 1'b0;
+//       rd_reset <= 1'b0;
+//    end else if (raytest_clk) begin
+//       if (raytest && raytest_addr != 10'd15) begin    
+//             raytest_data <= raydata[32*raytest_addr +: 32];
+//             raytest_addr <= raytest_addr + 10'd1;
+//          //   sdr_writestart <= 1'b0;
+//             rt_done <= 1'b0;
+//             rd_reset <= 1'b0;
+//       end else if (raytest && raytest_addr == 10'd15) begin
+//             rt_done <= 1'b1;
+//             rd_reset <= 1'b1;    
+//       end
+//    end
+// end
 
-//assign LEDR[0] = rddone;
+assign LEDR[3] = rt_done;
 
 
 //logic [31:0] sdr_finaladdr;
@@ -506,7 +515,7 @@ Computer_System The_System (
    .expansion_jp2_export               ({GPIO_1[35:19], GPIO_1[17], GPIO_1[15:3], GPIO_1[1]}),
 
    // LEDs
-   .leds_export                        (LEDR),
+   //.leds_export                        (LEDR),
 
    // SDRAM
    .sdram_clk_clk                      (DRAM_CLK),
