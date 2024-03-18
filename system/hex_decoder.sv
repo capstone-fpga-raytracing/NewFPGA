@@ -1,7 +1,7 @@
 module hex_decoder
 (
-	input [3:0] hex_digit,
-	output logic [6:0] segments
+   input [3:0] hex_digit,
+   output logic [6:0] segments
 );
     always_comb begin
         case (hex_digit)
@@ -23,5 +23,5 @@ module hex_decoder
             4'hF: segments = 7'b0001110;   
             default: segments = 7'h7f;
         endcase
-	end
+   end
 endmodule

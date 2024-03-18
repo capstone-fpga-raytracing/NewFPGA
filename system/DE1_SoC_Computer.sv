@@ -353,20 +353,20 @@ begin
    sdr_writedata <= 32'hBEEF;
    sdr_baseaddr <= 'hDEAD;
    sdr_nelems <= 'd0;
-	rd_reset <= 1'b0;
-	raytest_en <= 1'b0;
+   rd_reset <= 1'b0;
+   raytest_en <= 1'b0;
 
    case(cur_state)
       READ_INIT: begin
         next_state <= start_rt ? READ_START : READ_INIT;
 //         if (rt_done)
 //            next_state <= WRITE_INIT;
-			// if(start_rt && !rt_done)
-			// 	next_state <= READ_START;
-			// else if(rt_done && !start_rt)
-			// 	next_state <= WRITE_INIT;
-			// else
-			// 	next_state <= READ_INIT;
+         // if(start_rt && !rt_done)
+         //    next_state <= READ_START;
+         // else if(rt_done && !start_rt)
+         //    next_state <= WRITE_INIT;
+         // else
+         //    next_state <= READ_INIT;
       end
       READ_START: begin
          sdr_readstart <= 1'b1;
