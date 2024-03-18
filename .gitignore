@@ -8,6 +8,7 @@ vsim.wlf
 wlft4qw64q
 *.Identifier
 *.vstf
+*.rbf
 
 *_sim
 *db/
