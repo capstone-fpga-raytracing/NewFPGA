@@ -30,8 +30,6 @@ module reader
    
    // AVMM interface
    output logic         avm_m0_read,
-   output logic         avm_m0_write, // unused
-   output logic [15:0]  avm_m0_writedata, // unused
    output logic [31:0]  avm_m0_address,
    input  logic [15:0]  avm_m0_readdata,
    input  logic         avm_m0_readdatavalid,
@@ -121,8 +119,8 @@ sdram_reader
    .reset(reset),
    
    .avm_m0_read(avm_m0_read),
-   .avm_m0_write(avm_m0_write),
-   .avm_m0_writedata(avm_m0_writedata),
+   .avm_m0_write(),
+   .avm_m0_writedata(),
    .avm_m0_address(avm_m0_address),
    .avm_m0_readdata(avm_m0_readdata),
    .avm_m0_readdatavalid(avm_m0_readdatavalid),
