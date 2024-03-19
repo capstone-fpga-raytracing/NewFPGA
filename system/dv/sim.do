@@ -22,7 +22,7 @@ vlog ../tri_reader.sv
 vlog fip_opts_tb.sv
 # vlog intersection_tb.sv
 # vlog shading_tb.sv
-# vlog cache_tb.sv
+vlog cache_tb.sv
 vlog reader_tb.sv
 
 
