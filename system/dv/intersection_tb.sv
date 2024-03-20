@@ -195,10 +195,16 @@ module tri_insector_tb();
             $display("[%d]starting tri: %0d", $time(), i);
             for(int j = 0; j < 3; j+=1) begin
                 for(int k = 0; k < 3; k+=1) begin
+                    i_ram_valid = 'b1;
                     i_ram_data = i_tri[0][0][k][15:0];
-                    repeat(5) @(posedge clk);
+                    @(posedge clk);
+                    i_ram_valid = 'b0;
+                    //repeat(5) @(posedge clk);
+                    i_ram_valid = 'b1;
                     i_ram_data = i_tri[0][0][k][31:16];
-                    repeat(5) @(posedge clk);
+                    @(posedge clk);
+                    i_ram_valid = 'b0;
+                    //repeat(5) @(posedge clk);
                 end
             end
             $display("[%0d]finished tri: %0d", $time(), i);
@@ -236,9 +242,7 @@ module tri_insector_tb();
 
         repeat (4) @(posedge clk);
         $display("[%0d]starting passing tri", $time());
-        i_ram_valid = 'b1;
         pass_tri(3);
-        i_ram_valid = 'b0;
         $display("[%0d]passing tri end", $time());
 
         repeat(20) @(posedge clk);

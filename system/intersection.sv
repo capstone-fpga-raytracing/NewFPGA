@@ -354,30 +354,37 @@ module tri_insector(
     logic [31:0] reg_tri_cnt_out, reg_tri_idx_min;
     logic signed [31:0] reg_t_min;
     logic reg_hit;
+    logic reg_fin_in, reg_fin_out; // state of counter into reader and outof intersection
+
+    assign reader_en = (reader_ready && !reg_fin_in) ? 1'b1 : 1'b0;
+
     always_ff@(posedge clk) begin
-        o_finish <= 1'b0;
-        reader_en = 1'b0;
         if(reset) begin
             reg_tri_cnt_in <= 'b0;
             reg_tri_cnt_out <= 'b0;
             reg_tri_idx_min <= 'b0;
             reg_t_min <= 'b0;
             reg_hit <= 1'b0;
+            reg_fin_in <= 1'b1;
+            reg_fin_out <= 1'b1;
         end else if (ivalid) begin
             reg_tri_cnt_in <= i_tri_cnt-1;
             reg_tri_cnt_out <= i_tri_cnt-1;
             reg_t_min <= `FIP_MAX;
             reg_hit <= 1'b0;
+            reg_fin_in <= 1'b0;
+            reg_fin_out <= 1'b0;
         end else begin
-            // decrease reg_tri_cnt_in and set reader_en if reader_ready
-            // decrease reg_tri_cnt_out if inter_valid
-            // and update reg_t_min , reg_tri_idx_min and reg_hit
-            // set o_finish when reg_tri_cnt_out == 0
-            if (reader_ready && !reg_tri_cnt_in) begin
-                reg_tri_cnt_in <= reg_tri_cnt_in-1;
-                reader_en <= 1'b1;
+            // reader in
+            if (reader_ready && !reg_fin_in) begin
+                if(reg_tri_cnt_in) begin
+                    reg_tri_cnt_in <= reg_tri_cnt_in-1;
+                end else begin
+                    reg_fin_in <= 1'b1;
+                end
             end
-            if (inter_valid && !o_finish) begin
+            // intersection out
+            if (inter_valid && !reg_fin_out) begin
                 if (hit && t < reg_t_min) begin
                     reg_t_min <= t;
                     reg_tri_idx_min <= reg_tri_cnt_out;
@@ -387,7 +394,7 @@ module tri_insector(
                 if (reg_tri_cnt_out) begin
                     reg_tri_cnt_out <= reg_tri_cnt_out-1;
                 end else begin
-                    o_finish <= 1'b1;
+                    reg_fin_out <= 1'b1;
                 end
             end
         end
@@ -396,5 +403,6 @@ module tri_insector(
     assign o_hit = reg_hit;
     assign o_t = reg_t_min;
     assign o_tri_index = reg_tri_idx_min;
+    assign o_finish = reg_fin_out;
 
 endmodule: tri_insector
