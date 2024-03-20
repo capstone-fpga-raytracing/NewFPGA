@@ -1,8 +1,8 @@
 // intersection modules
 
 `define FIP_ONE 32'sh00010000
-`define FIP_MIN = 32'sh80000000;
-`define FIP_MAX = 32'sh7fffffff;
+`define FIP_MIN 32'sh80000000
+`define FIP_MAX 32'sh7fffffff
 
 
 // pipelined intersection, accepts new inputs every cycle
@@ -12,7 +12,7 @@ typedef logic signed [31:0] fip;
 
 // pipelined intersection
 module intersection #(
-    parameter signed min_t = 0
+    parameter signed MIN_T = 0
 ) (
     input i_clk,
     input i_rstn,
@@ -65,7 +65,7 @@ module intersection #(
     logic result;
     always_comb begin
         result = 1'b0;
-        if (coef != 0 && a[31] == 0 && b[31] == 0 && anb <= `FIP_ONE && t >= min_t) result = 1'b1;
+        if (coef != 0 && a[31] == 0 && b[31] == 0 && anb <= `FIP_ONE && t >= MIN_T) result = 1'b1;
     end
 
     // stage3 reg
@@ -107,7 +107,7 @@ endmodule: intersection
 
 // basic intersection (without pipeline)
 module bs_intersection #(
-    parameter signed min_t = 0
+    parameter signed MIN_T = 0
 ) (
     input i_clk,
     input i_rstn,
@@ -132,7 +132,7 @@ module bs_intersection #(
     b = det(T1, E - i_tri[0], -D)/coef
     t = det(T1, T2, -D)/coef
 
-    check: coef != 0, a >= 0, b >= 0, a + b <= 1, t >= min_t
+    check: coef != 0, a >= 0, b >= 0, a + b <= 1, t >= MIN_T
     normal: T1 x T2 (normalized)
     */
 
@@ -170,7 +170,7 @@ module bs_intersection #(
     always_comb begin
         o_t = t;
         o_result = 1'b0;
-        if (coef != 0 && a[31] == 0 && b[31] == 0 && anb <= `FIP_ONE && t >= min_t) o_result = 1'b1;
+        if (coef != 0 && a[31] == 0 && b[31] == 0 && anb <= `FIP_ONE && t >= MIN_T) o_result = 1'b1;
     end
 
 endmodule: bs_intersection
@@ -178,7 +178,7 @@ endmodule: bs_intersection
 
 // fake intersection, for test only
 module dummy_intersection #(
-    parameter signed min_t = 0
+    parameter signed MIN_T = 0
 ) (
     input i_clk,
     input i_rstn,
@@ -197,6 +197,7 @@ module dummy_intersection #(
 endmodule: dummy_intersection
 
 
+/*
 module ray_intersect_box#(
     parameter SAT = 1,
     parameter FRA_BITS = 16
@@ -205,8 +206,8 @@ module ray_intersect_box#(
     input signed [31:0] pbbox [0:1][0:2], // pbbox[0] for min, pbbox[1] for max
     output logic intersects
 );
-    logic [31:0] t_entry = FIP_MIN;
-    logic [31:0] t_exit = FIP_MAX;
+    logic signed [31:0] t_entry;
+    logic signed [31:0] t_exit;
 
     wire signed [31:0] t_min[0:2];
     wire signed [31:0] t_max[0:2];
@@ -265,76 +266,128 @@ module ray_intersect_box#(
     endfunction
 
 endmodule: ray_intersect_box
+*/
 
 
-// 
-// haha insect
-//module tri_insector
-//(
-// input logic clk,
-// input logic reset,
-// 
-// // constant
-// input logic [31:0] tris_baseaddr,
-//
-// input logic [32*6-1:0] ray,
-// input logic [31:0] tri_index,
-// 
-// output logic hit,
-// output logic signed [31:0] t,
-// 
-// input logic ivalid,  // input valid, do not set unless input ready
-// output logic iready, // input ready
-// output logic ovalid, // output valid
-// 
-// // AVMM interface
-//   output logic         avm_m0_read,
-//   output logic         avm_m0_write,
-//   output logic [15:0]  avm_m0_writedata,
-//   output logic [31:0]  avm_m0_address,
-//   input  logic [15:0]  avm_m0_readdata,
-//   input  logic         avm_m0_readdatavalid,
-//   output logic [1:0]   avm_m0_byteenable,
-//   input  logic         avm_m0_waitrequest
-//);
-//
-//wire [BLOCKSZ-1:0] raw_data;
-//
-//fip [0:2][0:2] rdtri;
-//genvar i, j;
-//generate 
-// for (i=0; i<3; ++i) begin: cast0
-//    for (j=0; j<3; ++j) begin: cast1
-//       assign rdtri[i][j] = (fip)raw_data[(32*(3*i+j+1)-1 : 32*(3*i+j)];
-//    end
-// end
-//endgenerate
-//
-//wire rddone;
-//
-//assign iready = rddone;
-//
-//tri_reader tri_read
-//(
-// .clk(clk),
-// .reset(reset),
-// 
-// .avm_m0_read(avm_m0_read),
-//   .avm_m0_write(avm_m0_write),
-//   .avm_m0_writedata(avm_m0_writedata),
-//   .avm_m0_address(avm_m0_address),
-//   .avm_m0_readdata(avm_m0_readdata),
-//   .avm_m0_readdatavalid(avm_m0_readdatavalid),
-//   .avm_m0_byteenable(avm_m0_byteenable),
-//   .avm_m0_waitrequest(avm_m0_waitrequest),
-// 
-// .baseaddr(tris_baseaddr),
-// .index(tri_index),
-// .read(ivalid),
-// 
-// .data(raw_data),
-// .done(rddone)
-//);
-//
 
-endmodule
+module tri_insector(
+    input clk,
+    input reset,
+    input ivalid,  // enable, should be one cycle
+    input [31:0] baseaddr, // const in one batch
+    input [32*6-1:0] i_ray, // const in one batch
+    input [31:0] i_tri_cnt, // sampled on ivalid
+
+    output logic o_hit, // if there is any hit
+    output logic signed [31:0] o_t, // min distance, if there is any hit
+    output logic [31:0] o_tri_index, // triangle index of min distance
+    output logic o_finish, // batch finish, stays high
+
+    // AVMM interface, SDRAM controller <-> reader <-> avalon_sdr
+    output logic         avm_m0_read,
+    output logic [31:0]  avm_m0_address,
+    input  [15:0]        avm_m0_readdata,
+    input                avm_m0_readdatavalid,
+    output logic [1:0]   avm_m0_byteenable,
+    input                avm_m0_waitrequest
+);
+
+    logic reader_en, reader_ready, reader_valid;
+    logic [32*9-1:0] reader_data;
+    reader #(
+        .NDWORDS(9)
+    ) tri_reader_inst (
+        .clk(clk),
+        .reset(reset),
+
+        .baseaddr(baseaddr),
+        .index(tri_cnt_in),
+        .read(reader_en),
+        .data(reader_data),
+        .ovalid(reader_valid),
+        .iready(reader_ready),
+
+        .avm_m0_read(avm_m0_read),
+        .avm_m0_address(avm_m0_address),
+        .avm_m0_readdata(avm_m0_readdata),
+        .avm_m0_readdatavalid(avm_m0_readdatavalid),
+        .avm_m0_byteenable(avm_m0_byteenable),
+        .avm_m0_waitrequest(avm_m0_waitrequest)
+    );
+
+    logic signed [31:0] reader_tri [0:2][0:2];
+    genvar i, j;
+    generate begin: unflatten_reader_data
+        for (i=0; i<3; ++i) begin: reader_data0
+            for (j=0; j<3; ++j) begin: reader_data1
+                assign reader_tri[i][j] = reader_data[32*(3*i+j+1)-1 : 32*(3*i+j)];
+            end
+        end
+    end endgenerate
+
+    logic signed [31:0] ray [0:1][0:2];
+    generate begin: unflatten_ray_data
+        for (i=0; i<2; ++i) begin: ray0
+            for (j=0; j<3; ++j) begin: ray1
+                assign ray[i][j] = i_ray[32*(2*i+j+1)-1 : 32*(2*i+j)];
+            end
+        end
+    end endgenerate
+
+    logic inter_valid;
+    logic signed [31:0] t;
+    logic hit;
+    intersection #(
+        .MIN_T(0)
+    ) intersection_inst (
+        .i_clk(clk),
+        .i_rstn(!reset),
+        .i_en(reader_valid),
+        .i_tri(reader_tri),
+        .i_ray(ray),
+        .o_t(t),
+        .o_result(hit),
+        .o_valid(inter_valid)
+    );
+
+    logic [31:0] reg_tri_cnt_in, reg_tri_cnt_out, reg_tri_idx_min;
+    logic signed [31:0] reg_t_min;
+    logic reg_hit;
+    always_ff@(posedge clk) begin
+        o_finish <= 1'b0;
+        if(reset) begin
+            reg_tri_cnt_in <= 'b0;
+            reg_tri_cnt_out <= 'b0;
+            reg_tri_idx_min <= 'b0;
+            reg_t_min <= 'b0;
+            reg_hit <= 1'b0;
+        end else if (ivalid) begin
+            reg_tri_cnt_in <= i_tri_cnt-1;
+            reg_tri_cnt_out <= i_tri_cnt-1;
+            reg_t_min <= `FIP_MAX;
+            reg_hit <= 1'b0;
+        end else begin
+            // decrease reg_tri_cnt_in and set reader_en if reader_ready
+            // decrease reg_tri_cnt_out if inter_valid
+            // and update reg_t_min , reg_tri_idx_min and reg_hit
+            // set o_finish when reg_tri_cnt_out == 0
+            if (reader_ready && !reg_tri_cnt_in) begin
+                reg_tri_cnt_in <= reg_tri_cnt_in-1;
+                reader_en <= 1'b1;
+            end
+            if (inter_valid) begin
+                if (reg_tri_cnt_out) begin
+                    reg_tri_cnt_out <= reg_tri_cnt_out-1;
+                    if (t < reg_t_min) begin
+                        reg_t_min <= t;
+                        reg_tri_idx_min <= reg_tri_cnt_out;
+                        reg_hit <= 1'b1;
+                    end
+                end else begin
+                    o_finish <= 1'b1;
+                end
+            end
+        end
+    end
+
+endmodule: tri_insector
