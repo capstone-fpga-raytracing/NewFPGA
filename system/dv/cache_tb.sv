@@ -15,7 +15,8 @@ module cache_ro_tb();
     logic [SIZE_BLOCK-1:0] i_data;
     logic [SIZE_BLOCK-1:0] o_data;
     logic o_success;
-    cache_ro #(.SIZE_BLOCK(SIZE_BLOCK), .BIT_TOTAL(BIT_TOTAL), .BIT_INDEX(BIT_INDEX), .WAY(WAY)) cache_ro_inst (clk, rst, en, wrt, i_addr, i_data, o_data, o_success);
+    cache_ro #(.SIZE_BLOCK(SIZE_BLOCK), .BIT_TOTAL(BIT_TOTAL), .BIT_INDEX(BIT_INDEX), .WAY(WAY))
+               cache_ro_inst (clk, rst, en, wrt, i_addr, i_data, o_data, o_success);
 
     // TO DO: replace with data structure
     logic [SIZE_BLOCK-1:0] correct_data;
@@ -38,19 +39,15 @@ module cache_ro_tb();
         i_addr = dut_addr;
         i_data = dut_data;
         @(posedge clk);
-        #1;
+        #1; // avoid delta cycle
         en = 0;
 
         if (o_success !== success) begin
             $display("[%0d]Test %0d ERROR! Got o_success: %0d from %h, should be %h", $time(), test_index, o_success, dut_addr, success);
             error_flag = 1'b1;
         end
-        if (!dut_wrt && o_data !== correct_data) begin
+        if (o_data !== correct_data) begin
             $display("[%0d]Test %0d ERROR! Got o_data: %h from %h, should be %h", $time(), test_index, o_data, dut_addr, correct_data);
-            error_flag = 1'b1;
-        end
-        if (dut_wrt && o_data !== 'b0) begin
-            $display("[%0d]Test %0d ERROR! Got o_data: %h from %h, should be 0", $time(), test_index, o_data, dut_addr);
             error_flag = 1'b1;
         end
 
@@ -94,6 +91,7 @@ module cache_ro_tb();
         test(0, 'd256, 'h0);
 
         // end
+        @(posedge clk);
         $display("[%0d]Test ends. All %0d test(s) passed.", $time(), test_index);
         $stop();
     end

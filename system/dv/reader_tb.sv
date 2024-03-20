@@ -9,14 +9,13 @@ module reader_tb();
     logic [BLOCKSZ-1:0] o_data;
     logic o_valid, o_ready;
 
-    logic o_ram_rd, drop_wr;
-    logic [15:0] drop_wrdata;
+    logic o_ram_rd;
     logic [31:0] o_ram_addr;
     logic [15:0] i_ram_data;
     logic i_ram_valid, i_ram_busy;
     logic [1:0] drop_byteenable;
 
-    tri_reader #(
+    reader #(
         .NDWORDS(NDWORDS)
     ) dut (
         .clk(clk),
@@ -29,8 +28,6 @@ module reader_tb();
         .iready(o_ready), // !o_busy
 
         .avm_m0_read(o_ram_rd),
-        .avm_m0_write(drop_wr), // ignore
-        .avm_m0_writedata(drop_wrdata), // ignore
         .avm_m0_address(o_ram_addr),
         .avm_m0_readdata(i_ram_data), // 2 cyles to return 1 word
         .avm_m0_readdatavalid(i_ram_valid), // 2 cyles to return 1 word
@@ -40,7 +37,7 @@ module reader_tb();
 
     initial begin
 
-        repeat(15) @(posedge clk);
+        repeat(19) @(posedge clk);
         i_ram_data = 'h0001;
         i_ram_valid = 'b1;
         @(posedge clk);
@@ -70,6 +67,8 @@ module reader_tb();
         i_ram_busy = 'b0;
         repeat(4) @(posedge clk);
         rst = 'b0;
+		  
+		  repeat(4) @(posedge clk);
 
         // set i_idx, i_en, i_ram_data, i_ram_valid
         // monitor o_data, o_valid, o_ready, o_ram_rd, o_ram_addr

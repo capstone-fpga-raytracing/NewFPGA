@@ -1,18 +1,20 @@
 // this is terrible code and I should be jailed for it
 //
 //
-// Index is the index of the tri in the tri list.
-// Data can be sampled when ovalid is asserted.
-// Read and index should be kept high until then.
+// Reads an element from an array in memory, caching
+// it so future accesses are single-cycle.
+// 
+// Index is the index of the element in the array.
+// Data should be sampled when ovalid is asserted.
 // 
 // If data is in cache, ovalid is asserted on the next
 // cycle, otherwise it may take several cycles for
-// it to be asserted.
+// it to be asserted as it is read from SDRAM.
 //
-module tri_reader
+module reader
 #(
    parameter NDWORDS = 9,
-   localparam BLOCKSZ = 32*NDWORDS
+   localparam ELEMSZ = 32*NDWORDS
 )(
    input logic clk,
    input logic reset,
@@ -21,15 +23,13 @@ module tri_reader
    input logic [31:0] index,
    input logic read, // behaves like ivalid
    
-   output logic [BLOCKSZ-1:0] data,
+   output logic [ELEMSZ-1:0] data,
    
    output logic ovalid, // output valid
    output logic iready, // input ready
    
    // AVMM interface
    output logic         avm_m0_read,
-   output logic         avm_m0_write, // unused
-   output logic [15:0]  avm_m0_writedata, // unused
    output logic [31:0]  avm_m0_address,
    input  logic [15:0]  avm_m0_readdata,
    input  logic         avm_m0_readdatavalid,
@@ -41,7 +41,7 @@ logic cache_op; // 0 for read, 1 for write
 logic cache_en;
 
 // data read from memory
-wire [BLOCKSZ-1:0] mem_rddata;
+wire [ELEMSZ-1:0] mem_rddata;
 
 reg pending_rq;
 reg pending_rq_en, pending_rq_reset;
@@ -90,12 +90,12 @@ always_comb begin
 end
 
 cache_ro #(
-   .SIZE_BLOCK(BLOCKSZ),
+   .SIZE_BLOCK(ELEMSZ),
    .BIT_TOTAL(32),
    .BIT_INDEX(8), // is this okay?
    .WAY(1)
 )
-tri_cache(
+elem_cache(
    .i_clk(clk),
    .i_rst(reset),
    .i_en(cache_en),
@@ -119,8 +119,8 @@ sdram_reader
    .reset(reset),
    
    .avm_m0_read(avm_m0_read),
-   .avm_m0_write(avm_m0_write),
-   .avm_m0_writedata(avm_m0_writedata),
+   .avm_m0_write(),
+   .avm_m0_writedata(),
    .avm_m0_address(avm_m0_address),
    .avm_m0_readdata(avm_m0_readdata),
    .avm_m0_readdatavalid(avm_m0_readdatavalid),
@@ -172,7 +172,7 @@ begin
          cache_en <= read;
          cache_op <= 1'b0;
          iready <= 1'b1;
-         next_state <= CHECK_CACHE2;
+         next_state <= read ? CHECK_CACHE2 : CHECK_CACHE1;
       end
    
       CHECK_CACHE2:
@@ -208,7 +208,7 @@ begin
             end else begin
                t_selidx <= 2'd0; // index
                t_selidx_en <= 1'b1;
-               next_state <= CHECK_CACHE2;
+               next_state <= CHECK_CACHE1;
             end
          end
       end
@@ -226,8 +226,7 @@ begin
             t_selidx <= 2'd0; // index
             t_selidx_en <= 1'b1;
             pending_rq_reset <= 1'b1;
-            // does not go to check_cache1 but still works? bug?
-            next_state <= CHECK_CACHE2;
+            next_state <= CHECK_CACHE1;
          end else begin
             mem_readstart <= 1'b1;
             next_state <= SDRAM_RDASSERT_PENDING;
@@ -244,7 +243,7 @@ begin
             t_selidx <= 2'd0; // index
             t_selidx_en <= 1'b1;
             pending_rq_reset <= 1'b1;
-            next_state <= CHECK_CACHE2;
+            next_state <= CHECK_CACHE1;
          end
       end
    endcase
