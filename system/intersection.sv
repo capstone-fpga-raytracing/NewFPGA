@@ -281,7 +281,7 @@ module tri_insector(
     output logic o_hit, // if there is any hit
     output logic signed [31:0] o_t, // min distance, if there is any hit
     output logic [31:0] o_tri_index, // triangle index of min distance
-    output logic o_finish, // batch finish, stays high
+    output logic o_finish, // batch finish, high for one cycle
 
     // AVMM interface, SDRAM controller <-> reader <-> avalon_sdr
     output logic         avm_m0_read,
@@ -356,6 +356,7 @@ module tri_insector(
     logic reg_hit;
     always_ff@(posedge clk) begin
         o_finish <= 1'b0;
+        reader_en = 1'b0;
         if(reset) begin
             reg_tri_cnt_in <= 'b0;
             reg_tri_cnt_out <= 'b0;
@@ -376,14 +377,15 @@ module tri_insector(
                 reg_tri_cnt_in <= reg_tri_cnt_in-1;
                 reader_en <= 1'b1;
             end
-            if (inter_valid) begin
+            if (inter_valid && !o_finish) begin
+                if (hit && t < reg_t_min) begin
+                    reg_t_min <= t;
+                    reg_tri_idx_min <= reg_tri_cnt_out;
+                    reg_hit <= 1'b1;
+                end
+
                 if (reg_tri_cnt_out) begin
                     reg_tri_cnt_out <= reg_tri_cnt_out-1;
-                    if (t < reg_t_min) begin
-                        reg_t_min <= t;
-                        reg_tri_idx_min <= reg_tri_cnt_out;
-                        reg_hit <= 1'b1;
-                    end
                 end else begin
                     o_finish <= 1'b1;
                 end
