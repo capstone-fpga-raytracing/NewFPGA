@@ -330,7 +330,7 @@ module tri_insector(
     generate begin: unflatten_ray_data
         for (i=0; i<2; ++i) begin: ray0
             for (j=0; j<3; ++j) begin: ray1
-                assign ray[i][j] = i_ray[32*(2*i+j+1)-1 : 32*(2*i+j)];
+                assign ray[i][j] = i_ray[32*(3*i+j+1)-1 : 32*(3*i+j)];
             end
         end
     end endgenerate

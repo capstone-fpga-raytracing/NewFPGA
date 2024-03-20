@@ -227,13 +227,13 @@ module tri_insector_tb();
         // monitor o_hit, o_t, o_tri_index, o_finish, o_ram_rd, o_ram_addr
 
         // start
-        //i_ray[0] = '{'b0, 'b0, 1 << 16};
-        //i_ray[1] = '{'b0, 'b0, -1 << 16};
+        //ray[0] = '{'b0, 'b0, 1 << 16};
+        ///ray[1] = '{'b0, 'b0, -1 << 16};
         i_ray = 'b0;
-        i_ray[31:0] = -1 << 16;
-        i_ray[127:96] = 1 << 16;
+        i_ray[95:64] = 1 << 16;
+        i_ray[191:160] = -1 << 16;
 
-        baseaddr = 'b1;
+        baseaddr = 'h1000;
         i_tri_cnt = 'd3;
         en = 'b1;
         @(posedge clk);
