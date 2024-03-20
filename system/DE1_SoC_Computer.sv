@@ -359,14 +359,6 @@ begin
    case(cur_state)
       READ_INIT: begin
         next_state <= start_rt ? READ_START : READ_INIT;
-//         if (rt_done)
-//            next_state <= WRITE_INIT;
-         // if(start_rt && !rt_done)
-         //    next_state <= READ_START;
-         // else if(rt_done && !start_rt)
-         //    next_state <= WRITE_INIT;
-         // else
-         //    next_state <= READ_INIT;
       end
       READ_START: begin
          sdr_readstart <= 1'b1;
@@ -398,16 +390,71 @@ begin
       end
 
       WRITE_DONE: begin
-         // rd_reset <= 1'b1;
-         // raytest_en <= 1'b1;
-         // rddone <= 1'b1;
-         // rt_done <= 1'b1;
-
          next_state <= READ_INIT;
       end
    endcase
 
 end
+// READ_INIT: begin
+//          next_state <= start_rt ? READ_START : READ_INIT;
+//       end
+//       READ_START: begin
+//          sdr_readstart <= 1'b1;
+//          next_state <= READ_ASSERT;
+//       end
+      
+//       READ_ASSERT: begin
+//          sdr_baseaddr <= 'b0;
+//          sdr_nelems <= 30'd15;
+//          // end_rt <= sdr_readend;
+//          next_state <= sdr_readend ? READ_DONE : READ_ASSERT;
+//       end
+      
+//       READ_DONE: begin
+//          next_state <= TRI_INSECTOR;
+//       end
+
+//       // send triangles to tri_insector
+//       TRI_INSECTOR_INIT: begin
+//          if(iready) begin
+//             tris_baseaddr <= sdr_baseaddr;
+//             ivalid <= 1'b1;
+//             // assign ray
+//             if(tris_index == numtris-1) begin
+//                next_state <= TRI_INSECTOR_DONE;
+//             end else begin
+//                next_state <= TRI_INSECTOR_INIT;
+//             end
+//          end else begin
+//             next_state <= TRI_INSECTOR_INIT;
+//          end
+//       end
+
+//       TRI_INSECTOR_DONE: begin
+//          if(num_ovalid == numtris) begin
+//             next_state <= WRITE_INIT;
+//          end else begin
+//             next_state <= TRI_INSECTOR_DONE;
+//          end
+//       end
+
+//       WRITE_INIT: begin
+//          sdr_writestart <= 1'b1;
+//          next_state <= WRITE_ASSERT;
+//       end
+
+//       WRITE_ASSERT: begin
+//          sdr_baseaddr <= 'b0;
+//          sdr_nelems <= 30'd1;
+//          end_rt <= sdr_writeend;
+//          next_state <= sdr_writeend ? WRITE_DONE : WRITE_ASSERT;
+//       end
+
+//       WRITE_DONE: begin
+//          next_state <= READ_INIT;
+//       end
+//    endcase
+
 
 // always_ff @(posedge sdr_clk or posedge sdr_reset) begin
 //    if (sdr_reset)
