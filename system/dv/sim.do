@@ -41,8 +41,9 @@ vlog intersection_tb.sv
 
 # vsim cache_ro_tb
 # vsim cache_ro_multi_tb
-vsim reader_tb
+# vsim reader_tb
 # vsim intersection_tb
+vsim tri_insector_tb
 # vsim bp_shading_tb
 # vsim bp_shading_light_tb
 

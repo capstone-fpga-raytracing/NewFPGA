@@ -129,10 +129,121 @@ endmodule: intersection_tb
 
 
 module tri_insector_tb();
+    logic clk, reset, en;
+    always #10 clk = ~clk;
+
+    logic [31:0] baseaddr;
+    logic [32*6-1:0] i_ray;
+    logic [31:0] i_tri_cnt;
+
+    logic o_hit;
+    logic signed [31:0] o_t;
+    logic [31:0] o_tri_index;
+    logic o_finish;
+
+    logic o_ram_rd;
+    logic [31:0] o_ram_addr;
+    logic [15:0] i_ram_data;
+    logic i_ram_valid, i_ram_busy;
+    logic [1:0] drop_byteenable;
+
+    tri_insector dut (
+        .clk(clk),
+        .reset(reset),
+        .ivalid(en),
+        .baseaddr(baseaddr),
+        .i_ray(i_ray),
+        .i_tri_cnt(i_tri_cnt),
+
+        .o_hit(o_hit),
+        .o_t(o_t),
+        .o_tri_index(o_tri_index),
+        .o_finish(o_finish),
+
+        .avm_m0_read(o_ram_rd),
+        .avm_m0_address(o_ram_addr),
+        .avm_m0_readdata(i_ram_data), // 2 cyles to return 1 word
+        .avm_m0_readdatavalid(i_ram_valid), // 2 cyles to return 1 word
+        .avm_m0_byteenable(drop_byteenable), // ignore
+        .avm_m0_waitrequest(i_ram_busy) // const = 0
+    );
+
+    // tri[0:2]
+    logic signed [31:0] i_tri [0:2][0:2][0:2];
+    always_comb begin
+        // tri
+        i_tri[0][0] = '{'b0, 2 << 16, 'b0};
+        i_tri[0][1] = '{-2 << 16, -2 << 16, 'b0};
+        i_tri[0][2] = '{2 << 16, 2 << 16, 'b0};
+        // expects result = 1, t = 65536 (1)
+
+        i_tri[1][0] = '{'b0, 2 << 16, 'b0};
+        i_tri[1][1] = '{-2 << 16, -2 << 16, 'b0};
+        i_tri[1][2] = '{2 << 16, -2 << 16, 'b0};
+        // expects result = 1, t = 65536 (1)
+
+        i_tri[2][0] = '{'b0, 2 << 16, 'b0};
+        i_tri[2][1] = '{-2 << 16, 2 << 16, 'b0};
+        i_tri[2][2] = '{2 << 16, 2 << 16, 'b0};
+        // expects result = 0, t = x (default in simulation of div by 0)
+    end
+
+    task automatic pass_tri(
+        input int tri_num); begin
+
+        for(int i = 0; i < tri_num; i+=1) begin
+            $display("[%d]starting tri: %0d", $time(), i);
+            for(int j = 0; j < 3; j+=1) begin
+                for(int k = 0; k < 3; k+=1) begin
+                    i_ram_data = i_tri[0][0][k][15:0];
+                    repeat(5) @(posedge clk);
+                    i_ram_data = i_tri[0][0][k][31:16];
+                    repeat(5) @(posedge clk);
+                end
+            end
+            $display("[%0d]finished tri: %0d", $time(), i);
+        end
+
+    end endtask
 
     initial begin
+        clk = 'b1;
+        reset = 'b1;
+        en = 'b0;
+        i_ram_data = 'b0;
+        i_ram_valid = 'b0;
+        i_ram_busy = 'b0;
+        repeat(6) @(posedge clk);
+        reset = 'b0;
+        repeat(6) @(posedge clk);
 
-    $display("[%0d]tri_insector: test end\n", $time());
-    $stop();
+        // set en, baseaddr, i_ray, i_tri_cnt, i_ram_data, i_ram_valid
+        // monitor o_hit, o_t, o_tri_index, o_finish, o_ram_rd, o_ram_addr
+
+        // start
+        //i_ray[0] = '{'b0, 'b0, 1 << 16};
+        //i_ray[1] = '{'b0, 'b0, -1 << 16};
+        i_ray = 'b0;
+        i_ray[31:0] = -1 << 16;
+        i_ray[127:96] = 1 << 16;
+
+        baseaddr = 'b1;
+        i_tri_cnt = 'd3;
+        en = 'b1;
+        @(posedge clk);
+        $display("[%0d]enabled", $time());
+        en = 'b0;
+
+        repeat (4) @(posedge clk);
+        $display("[%0d]starting passing tri", $time());
+        i_ram_valid = 'b1;
+        pass_tri(3);
+        i_ram_valid = 'b0;
+        $display("[%0d]passing tri end", $time());
+
+        repeat(20) @(posedge clk);
+
+        $display("[%0d]tri_insector: test end\n", $time());
+        $stop();
     end
 endmodule: tri_insector_tb
