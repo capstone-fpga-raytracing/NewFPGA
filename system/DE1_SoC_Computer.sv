@@ -311,90 +311,90 @@ output               HPS_USB_STP;
 //  Testing
 //=======================================================
 
-wire sdr_clk;
-logic sdr_reset;
-logic rd_reset;
-
-
-
-logic [2047:0] raydata;
-assign raydata = sdr_readdata;
-
-localparam READ_INIT = 3'd0,
-           READ_START = 3'd1,
-           READ_ASSERT = 3'd2,
-           READ_DONE = 3'd3,
-           WRITE_INIT = 3'd4,
-           WRITE_ASSERT = 3'd5,
-           WRITE_DONE = 3'd6;
-
-
-logic [2:0] cur_state, next_state;
-
-always_ff @(posedge sdr_clk) begin
-   if (sdr_reset) cur_state <= READ_INIT;
-   else cur_state <= next_state;
-end
-
-reg raytest_en;
-logic end_rt;
-logic [7:0] end_rtstat;
-assign end_rtstat = 8'd1;
-
-logic raytest, raytest_clk;
-logic [9:0] raytest_addr;
-logic [31:0] raytest_data;
-     
-always @*
-begin
-   end_rt <= 1'b0;
-   sdr_readstart <= 1'b0;
-   sdr_writestart <= 1'b0;
-   sdr_writedata <= 32'hBEEF;
-   sdr_baseaddr <= 'hDEAD;
-   sdr_nelems <= 'd0;
-   rd_reset <= 1'b0;
-   raytest_en <= 1'b0;
-
-   case(cur_state)
-      READ_INIT: begin
-        next_state <= start_rt ? READ_START : READ_INIT;
-      end
-      READ_START: begin
-         sdr_readstart <= 1'b1;
-         next_state <= READ_ASSERT;
-      end
-      
-      READ_ASSERT: begin
-         sdr_baseaddr <= 'b0;
-         sdr_nelems <= 30'd15;
-         //rddone <= sdr_readend;
-         end_rt <= sdr_readend;
-         next_state <= sdr_readend ? READ_DONE : READ_ASSERT;
-      end
-      
-      READ_DONE: begin
-         next_state <= WRITE_INIT;
-      end
-
-      WRITE_INIT: begin
-         sdr_writestart <= 1'b1;
-         next_state <= WRITE_ASSERT;
-      end
-
-      WRITE_ASSERT: begin
-         sdr_baseaddr <= 'b0;
-         sdr_nelems <= 30'd1;
-         end_rt <= sdr_writeend;
-         next_state <= sdr_writeend ? WRITE_DONE : WRITE_ASSERT;
-      end
-
-      WRITE_DONE: begin
-         next_state <= READ_INIT;
-      end
-   endcase
-
-end
+//wire sdr_clk;
+//logic sdr_reset;
+//logic rd_reset;
+//
+//
+//
+//logic [2047:0] raydata;
+//assign raydata = sdr_readdata;
+//
+//localparam READ_INIT = 3'd0,
+//           READ_START = 3'd1,
+//           READ_ASSERT = 3'd2,
+//           READ_DONE = 3'd3,
+//           WRITE_INIT = 3'd4,
+//           WRITE_ASSERT = 3'd5,
+//           WRITE_DONE = 3'd6;
+//
+//
+//logic [2:0] cur_state, next_state;
+//
+//always_ff @(posedge sdr_clk) begin
+//   if (sdr_reset) cur_state <= READ_INIT;
+//   else cur_state <= next_state;
+//end
+//
+//reg raytest_en;
+//logic end_rt;
+//logic [7:0] end_rtstat;
+//assign end_rtstat = 8'd1;
+//
+//logic raytest, raytest_clk;
+//logic [9:0] raytest_addr;
+//logic [31:0] raytest_data;
+//     
+//always @*
+//begin
+//   end_rt <= 1'b0;
+//   sdr_readstart <= 1'b0;
+//   sdr_writestart <= 1'b0;
+//   sdr_writedata <= 32'hBEEF;
+//   sdr_baseaddr <= 'hDEAD;
+//   sdr_nelems <= 'd0;
+//   rd_reset <= 1'b0;
+//   raytest_en <= 1'b0;
+//
+//   case(cur_state)
+//      READ_INIT: begin
+//        next_state <= start_rt ? READ_START : READ_INIT;
+//      end
+//      READ_START: begin
+//         sdr_readstart <= 1'b1;
+//         next_state <= READ_ASSERT;
+//      end
+//      
+//      READ_ASSERT: begin
+//         sdr_baseaddr <= 'b0;
+//         sdr_nelems <= 30'd15;
+//         //rddone <= sdr_readend;
+//         end_rt <= sdr_readend;
+//         next_state <= sdr_readend ? READ_DONE : READ_ASSERT;
+//      end
+//      
+//      READ_DONE: begin
+//         next_state <= WRITE_INIT;
+//      end
+//
+//      WRITE_INIT: begin
+//         sdr_writestart <= 1'b1;
+//         next_state <= WRITE_ASSERT;
+//      end
+//
+//      WRITE_ASSERT: begin
+//         sdr_baseaddr <= 'b0;
+//         sdr_nelems <= 30'd1;
+//         end_rt <= sdr_writeend;
+//         next_state <= sdr_writeend ? WRITE_DONE : WRITE_ASSERT;
+//      end
+//
+//      WRITE_DONE: begin
+//         next_state <= READ_INIT;
+//      end
+//   endcase
+//
+//end
 // READ_INIT: begin
 //          next_state <= start_rt ? READ_START : READ_INIT;
 //       end
@@ -464,7 +464,7 @@ end
 //    else raytest <= raytest;
 // end
 
-logic rt_done;
+//logic rt_done;
 //assign raytest = rddone;
 
 rate_divider rd ( CLOCK_50, raytest_clk);
@@ -491,19 +491,19 @@ rate_divider rd ( CLOCK_50, raytest_clk);
 //    end
 // end
 
-assign LEDR[3] = rt_done;
+//assign LEDR[3] = rt_done;
 
 
 //logic [31:0] sdr_finaladdr;
 //logic [15:0] sdr_writtendata;
 
         
-hex_decoder h0(.hex_digit(raytest_data[3:0]),.segments(HEX0));
-hex_decoder h1(.hex_digit(raytest_data[7:4]),.segments(HEX1));
-hex_decoder h2(.hex_digit(raytest_data[11:8]),.segments(HEX2));
-hex_decoder h3(.hex_digit(raytest_data[15:12]),.segments(HEX3));
-hex_decoder h4(.hex_digit(raytest_data[19:16]),.segments(HEX4));
-hex_decoder h5(.hex_digit(raytest_data[23:20]),.segments(HEX5));
+//hex_decoder h0(.hex_digit(raytest_data[3:0]),.segments(HEX0));
+//hex_decoder h1(.hex_digit(raytest_data[7:4]),.segments(HEX1));
+//hex_decoder h2(.hex_digit(raytest_data[11:8]),.segments(HEX2));
+//hex_decoder h3(.hex_digit(raytest_data[15:12]),.segments(HEX3));
+//hex_decoder h4(.hex_digit(raytest_data[19:16]),.segments(HEX4));
+//hex_decoder h5(.hex_digit(raytest_data[23:20]),.segments(HEX5));
 
 //assign LEDR[8:0] = raytest_addr[8:0];
 
@@ -516,27 +516,27 @@ hex_decoder h5(.hex_digit(raytest_data[23:20]),.segments(HEX5));
 //assign LEDR[7:1] = fpga_leds_internal[6:0] | leds_export[6:0];
 //assign LEDR[9] = out_do_read_export;
 
-logic          start_rt;
-logic [31:0]   sdr_baseaddr;
-logic [29:0]   sdr_nelems;
-logic [2047:0] sdr_readdata;
-logic          sdr_readend;
-logic          sdr_readstart;
-logic [2047:0] sdr_writedata;
-logic          sdr_writeend;
-logic          sdr_writestart;
-
-logic [3:0]    hex0_bcd;
-logic          hex0_valid;
-wire [6:0]     hex0_wire;
-reg [6:0]      hex0_reg;
-
-hex_decoder h0dec(.hex_digit(hex0_bcd),.segments(hex0_wire));
-always @(posedge CLOCK_50)
-begin
-   if (hex0_valid)
-      hex0_reg <= hex0_wire;
-end
+//logic          start_rt;
+//logic [31:0]   sdr_baseaddr;
+//logic [29:0]   sdr_nelems;
+//logic [2047:0] sdr_readdata;
+//logic          sdr_readend;
+//logic          sdr_readstart;
+//logic [2047:0] sdr_writedata;
+//logic          sdr_writeend;
+//logic          sdr_writestart;
+//
+//logic [3:0]    hex0_bcd;
+//logic          hex0_valid;
+//wire [6:0]     hex0_wire;
+//reg [6:0]      hex0_reg;
+//
+//hex_decoder h0dec(.hex_digit(hex0_bcd),.segments(hex0_wire));
+//always @(posedge CLOCK_50)
+//begin
+//   if (hex0_valid)
+//      hex0_reg <= hex0_wire;
+//end
 //assign HEX0 = hex0_reg;
 
 
@@ -673,22 +673,22 @@ Computer_System The_System (
    .hps_io_hps_io_usb1_inst_CLK     (HPS_USB_CLKOUT),
    .hps_io_hps_io_usb1_inst_STP     (HPS_USB_STP),
    .hps_io_hps_io_usb1_inst_DIR     (HPS_USB_DIR),
-   .hps_io_hps_io_usb1_inst_NXT     (HPS_USB_NXT),
+   .hps_io_hps_io_usb1_inst_NXT     (HPS_USB_NXT)
    
    
-   .sdr_clk_clk          (sdr_clk),
-   .sdr_reset_export     (sdr_reset),
-   .sdr_baseaddr_export  (sdr_baseaddr),
-   .sdr_nelems_export    (sdr_nelems),
-   .sdr_readdata_export  (sdr_readdata),
-   .sdr_readend_export   (sdr_readend),
-   .sdr_readstart_export (sdr_readstart),
-   .sdr_writedata_export (sdr_writedata),
-   .sdr_writeend_export  (sdr_writeend),
-   .sdr_writestart_export(sdr_writestart),
-   .start_rt_export      (start_rt),
-   .end_rt_export        (end_rt),
-   .end_rtstat_export    (end_rtstat)
+//   .sdr_clk_clk          (sdr_clk),
+//   .sdr_reset_export     (sdr_reset),
+//   .sdr_baseaddr_export  (sdr_baseaddr),
+//   .sdr_nelems_export    (sdr_nelems),
+//   .sdr_readdata_export  (sdr_readdata),
+//   .sdr_readend_export   (sdr_readend),
+//   .sdr_readstart_export (sdr_readstart),
+//   .sdr_writedata_export (sdr_writedata),
+//   .sdr_writeend_export  (sdr_writeend),
+//   .sdr_writestart_export(sdr_writestart),
+//   .start_rt_export      (start_rt),
+//   .end_rt_export        (end_rt),
+//   .end_rtstat_export    (end_rtstat)
 );
 
 

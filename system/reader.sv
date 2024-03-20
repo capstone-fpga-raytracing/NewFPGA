@@ -14,7 +14,7 @@
 module reader
 #(
    parameter NDWORDS = 9,
-   localparam ELEMSZ = 32*NDWORDS
+   parameter ELEMSZ = 32*NDWORDS
 )(
    input logic clk,
    input logic reset,

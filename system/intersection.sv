@@ -301,7 +301,7 @@ module tri_insector(
         .reset(reset),
 
         .baseaddr(baseaddr),
-        .index(tri_cnt_in),
+        .index(reg_tri_cnt_in),
         .read(reader_en),
         .data(reader_data),
         .ovalid(reader_valid),
@@ -389,5 +389,9 @@ module tri_insector(
             end
         end
     end
+
+    assign o_hit = reg_hit;
+    assign o_t = reg_t_min;
+    assign o_tri_index = reg_tri_idx_min;
 
 endmodule: tri_insector
