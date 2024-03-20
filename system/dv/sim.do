@@ -12,7 +12,7 @@ vlog ../fip_opts.sv
 # vlog ../shading.sv
 vlog ../cache.sv
 vlog ../avalon_sdr.sv
-vlog ../tri_reader.sv
+vlog ../reader.sv
 
 
 # compile testbench

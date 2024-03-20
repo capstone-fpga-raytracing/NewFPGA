@@ -15,7 +15,7 @@ module reader_tb();
     logic i_ram_valid, i_ram_busy;
     logic [1:0] drop_byteenable;
 
-    tri_reader #(
+    reader #(
         .NDWORDS(NDWORDS)
     ) dut (
         .clk(clk),
@@ -37,7 +37,7 @@ module reader_tb();
 
     initial begin
 
-        repeat(15) @(posedge clk);
+        repeat(19) @(posedge clk);
         i_ram_data = 'h0001;
         i_ram_valid = 'b1;
         @(posedge clk);
@@ -67,6 +67,8 @@ module reader_tb();
         i_ram_busy = 'b0;
         repeat(4) @(posedge clk);
         rst = 'b0;
+		  
+		  repeat(4) @(posedge clk);
 
         // set i_idx, i_en, i_ram_data, i_ram_valid
         // monitor o_data, o_valid, o_ready, o_ram_rd, o_ram_addr

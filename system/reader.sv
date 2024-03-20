@@ -172,7 +172,7 @@ begin
          cache_en <= read;
          cache_op <= 1'b0;
          iready <= 1'b1;
-         next_state <= CHECK_CACHE2;
+         next_state <= read ? CHECK_CACHE2 : CHECK_CACHE1;
       end
    
       CHECK_CACHE2:
