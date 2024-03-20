@@ -8,7 +8,7 @@ vlib work
 # vlog ../*.sv
 
 vlog ../fip_opts.sv
-# vlog ../intersection.sv
+vlog ../intersection.sv
 # vlog ../shading.sv
 vlog ../cache.sv
 vlog ../avalon_sdr.sv
@@ -20,7 +20,7 @@ vlog ../reader.sv
 # vlog *.sv
 
 vlog fip_opts_tb.sv
-# vlog intersection_tb.sv
+vlog intersection_tb.sv
 # vlog shading_tb.sv
 vlog cache_tb.sv
 vlog reader_tb.sv

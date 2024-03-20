@@ -1,6 +1,6 @@
 module intersection_tb();
 
-    localparam signed min_t = 0;
+    localparam signed MIN_T = 0;
     logic signed [31:0] i_tri [0:2][0:2]; // i_tri[0] for vertex 0
     logic signed [31:0] i_ray [0:1][0:2]; // i_ray[0] for origin(E), i_ray[1] for direction(D)
     logic signed [31:0] o_t;
@@ -9,7 +9,7 @@ module intersection_tb();
     always #10 clk = ~clk;
 
     intersection #(
-        .min_t(min_t)
+        .MIN_T(MIN_T)
     ) dut (
         .i_clk(clk),
         .i_rstn(rstn),
