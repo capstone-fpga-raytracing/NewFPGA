@@ -126,3 +126,13 @@ module intersection_tb();
         $stop();
     end
 endmodule: intersection_tb
+
+
+module tri_insector_tb();
+
+    initial begin
+
+    $display("[%0d]tri_insector: test end\n", $time());
+    $stop();
+    end
+endmodule: tri_insector_tb

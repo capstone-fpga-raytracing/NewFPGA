@@ -92,8 +92,7 @@ end
 cache_ro #(
    .SIZE_BLOCK(ELEMSZ),
    .BIT_TOTAL(32),
-   .BIT_INDEX(8), // is this okay?
-   .WAY(1)
+   .BIT_INDEX(8) // is this okay?
 )
 elem_cache(
    .i_clk(clk),

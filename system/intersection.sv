@@ -294,6 +294,7 @@ module tri_insector(
 
     logic reader_en, reader_ready, reader_valid;
     logic [32*9-1:0] reader_data;
+    logic [31:0] reg_tri_cnt_in;
     reader #(
         .NDWORDS(9)
     ) tri_reader_inst (
@@ -350,7 +351,7 @@ module tri_insector(
         .o_valid(inter_valid)
     );
 
-    logic [31:0] reg_tri_cnt_in, reg_tri_cnt_out, reg_tri_idx_min;
+    logic [31:0] reg_tri_cnt_out, reg_tri_idx_min;
     logic signed [31:0] reg_t_min;
     logic reg_hit;
     always_ff@(posedge clk) begin
