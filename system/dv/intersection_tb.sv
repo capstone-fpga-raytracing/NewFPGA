@@ -192,22 +192,19 @@ module tri_insector_tb();
         input int tri_num); begin
 
         for(int i = 0; i < tri_num; i+=1) begin
+            while(!o_ram_rd) @(posedge clk);
+            i_ram_valid = 'b1;
             $display("[%d]starting tri: %0d", $time(), i);
             for(int j = 0; j < 3; j+=1) begin
                 for(int k = 0; k < 3; k+=1) begin
-                    i_ram_valid = 'b1;
-                    i_ram_data = i_tri[0][0][k][15:0];
+                    i_ram_data = i_tri[i][j][k][15:0];
                     @(posedge clk);
-                    i_ram_valid = 'b0;
-                    //repeat(5) @(posedge clk);
-                    i_ram_valid = 'b1;
-                    i_ram_data = i_tri[0][0][k][31:16];
+                    i_ram_data = i_tri[i][j][k][31:16];
                     @(posedge clk);
-                    i_ram_valid = 'b0;
-                    //repeat(5) @(posedge clk);
                 end
             end
             $display("[%0d]finished tri: %0d", $time(), i);
+            i_ram_valid = 'b0;
         end
 
     end endtask
