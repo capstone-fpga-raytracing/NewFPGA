@@ -192,22 +192,19 @@ module tri_insector_tb();
         input int tri_num); begin
 
         for(int i = 0; i < tri_num; i+=1) begin
+            while(!o_ram_rd) @(posedge clk);
+            i_ram_valid = 'b1;
             $display("[%d]starting tri: %0d", $time(), i);
             for(int j = 0; j < 3; j+=1) begin
                 for(int k = 0; k < 3; k+=1) begin
-                    i_ram_valid = 'b1;
-                    i_ram_data = i_tri[0][0][k][15:0];
+                    i_ram_data = i_tri[i][j][k][15:0];
                     @(posedge clk);
-                    i_ram_valid = 'b0;
-                    //repeat(5) @(posedge clk);
-                    i_ram_valid = 'b1;
-                    i_ram_data = i_tri[0][0][k][31:16];
+                    i_ram_data = i_tri[i][j][k][31:16];
                     @(posedge clk);
-                    i_ram_valid = 'b0;
-                    //repeat(5) @(posedge clk);
                 end
             end
             $display("[%0d]finished tri: %0d", $time(), i);
+            i_ram_valid = 'b0;
         end
 
     end endtask
@@ -227,13 +224,13 @@ module tri_insector_tb();
         // monitor o_hit, o_t, o_tri_index, o_finish, o_ram_rd, o_ram_addr
 
         // start
-        //i_ray[0] = '{'b0, 'b0, 1 << 16};
-        //i_ray[1] = '{'b0, 'b0, -1 << 16};
+        //ray[0] = '{'b0, 'b0, 1 << 16};
+        ///ray[1] = '{'b0, 'b0, -1 << 16};
         i_ray = 'b0;
-        i_ray[31:0] = -1 << 16;
-        i_ray[127:96] = 1 << 16;
+        i_ray[95:64] = 1 << 16;
+        i_ray[191:160] = -1 << 16;
 
-        baseaddr = 'b1;
+        baseaddr = 'h1000;
         i_tri_cnt = 'd3;
         en = 'b1;
         @(posedge clk);
