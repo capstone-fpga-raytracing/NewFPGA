@@ -47,13 +47,13 @@ module intersection #(
     logic signed [31:0] coef, det_a, det_b, det_t;
     logic [0:2] drop; // all 4 det modules are working parallelly, so keep only one o_valid
     fip_32_3b3_det det_c_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
-                               .i_array('{rout_t1, rout_t2, rout_e_t}), .o_det(coef), .o_valid(i_valid));
+                               .i_array('{rout_t1, rout_t2, rout__d}), .o_det(coef), .o_valid(i_valid));
     fip_32_3b3_det det_a_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
                                .i_array('{rout_e_t, rout_t2, rout__d}), .o_det(det_a), .o_valid(drop[0]));
     fip_32_3b3_det det_b_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
                                .i_array('{rout_t1, rout_e_t, rout__d}), .o_det(det_b), .o_valid(drop[1]));
     fip_32_3b3_det det_t_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
-                               .i_array('{rout_t1, rout_t2, rout__d}), .o_det(det_t), .o_valid(drop[2]));
+                               .i_array('{rout_t1, rout_t2, rout_e_t}), .o_det(det_t), .o_valid(drop[2]));
 
     // stage3: result
     logic signed [31:0] a, b, t;

@@ -12,6 +12,7 @@ vlog ../cache.sv
 vlog ../avalon_sdr.sv
 vlog ../reader.sv
 vlog ../intersection.sv
+vlog ../raytracer.sv
 # vlog ../shading.sv
 
 
@@ -24,6 +25,7 @@ vlog fip_opts_tb.sv
 vlog cache_tb.sv
 vlog reader_tb.sv
 vlog intersection_tb.sv
+vlog raytracer_tb.sv
 # vlog shading_tb.sv
 
 
@@ -43,7 +45,8 @@ vlog intersection_tb.sv
 # vsim cache_ro_multi_tb
 # vsim reader_tb
 # vsim intersection_tb
-vsim tri_insector_tb
+# vsim tri_insector_tb
+vsim raytracer_tb
 # vsim bp_shading_tb
 # vsim bp_shading_light_tb
 

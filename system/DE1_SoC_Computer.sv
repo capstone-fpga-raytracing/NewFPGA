@@ -455,41 +455,51 @@ output               HPS_USB_STP;
 //       end
 //    endcase
 
+logic sdr_clk;
+logic sdr_reset;
+logic raytest_en;
 
-// always_ff @(posedge sdr_clk or posedge sdr_reset) begin
-//    if (sdr_reset)
-//       raytest = 1'b0;
-//    else if (raytest_en)
-//       raytest = 1'b1;
-//    else raytest <= raytest;
-// end
+logic raytest;
+
+logic [223:0] raytest_vec;
+
+ always_ff @(posedge sdr_clk or posedge sdr_reset) begin
+    if (sdr_reset)
+       raytest = 1'b0;
+    else if (raytest_en)
+       raytest = 1'b1;
+    else raytest <= raytest;
+ end
 
 //logic rt_done;
 //assign raytest = rddone;
 
+logic [9:0] raytest_addr;
+logic [31:0] raytest_data;
+
 rate_divider rd ( CLOCK_50, raytest_clk);
 
-// always_ff @(posedge raytest_clk or posedge sdr_reset or posedge rd_reset) 
-// begin
-//    if (sdr_reset || rd_reset) begin
-//       raytest_addr <= 10'd0;
-//       raytest_data <= 32'hDEAD;
-//       // sdr_writestart <= 1'b0;
-//       rt_done <= 1'b0;
-//       rd_reset <= 1'b0;
-//    end else if (raytest_clk) begin
-//       if (raytest && raytest_addr != 10'd15) begin    
-//             raytest_data <= raydata[32*raytest_addr +: 32];
-//             raytest_addr <= raytest_addr + 10'd1;
-//          //   sdr_writestart <= 1'b0;
-//             rt_done <= 1'b0;
-//             rd_reset <= 1'b0;
-//       end else if (raytest && raytest_addr == 10'd15) begin
-//             rt_done <= 1'b1;
-//             rd_reset <= 1'b1;    
-//       end
-//    end
-// end
+ always_ff @(posedge raytest_clk or posedge sdr_reset) 
+ begin
+    if (sdr_reset) begin
+       raytest_addr <= 10'd0;
+       raytest_data <= 32'hDEAD;
+       // sdr_writestart <= 1'b0;
+       //rt_done <= 1'b0;
+       //rd_reset <= 1'b0;
+    end else if (raytest_clk) begin
+       if (raytest && raytest_addr != 10'd7) begin    
+             raytest_data <= raytest_vec[32*raytest_addr +: 32];
+             raytest_addr <= raytest_addr + 10'd1;
+          //   sdr_writestart <= 1'b0;
+             //rt_done <= 1'b0;
+             //rd_reset <= 1'b0;
+       //end else if (raytest && raytest_addr == 10'd15) begin
+       //      rt_done <= 1'b1;
+       //      rd_reset <= 1'b1;    
+       end
+    end
+ end
 
 //assign LEDR[3] = rt_done;
 
@@ -497,13 +507,13 @@ rate_divider rd ( CLOCK_50, raytest_clk);
 //logic [31:0] sdr_finaladdr;
 //logic [15:0] sdr_writtendata;
 
-        
-//hex_decoder h0(.hex_digit(raytest_data[3:0]),.segments(HEX0));
-//hex_decoder h1(.hex_digit(raytest_data[7:4]),.segments(HEX1));
-//hex_decoder h2(.hex_digit(raytest_data[11:8]),.segments(HEX2));
-//hex_decoder h3(.hex_digit(raytest_data[15:12]),.segments(HEX3));
-//hex_decoder h4(.hex_digit(raytest_data[19:16]),.segments(HEX4));
-//hex_decoder h5(.hex_digit(raytest_data[23:20]),.segments(HEX5));
+logic [31:0] dbg_out;
+hex_decoder h0(.hex_digit(raytest_data[3:0]),.segments(HEX0));
+hex_decoder h1(.hex_digit(raytest_data[7:4]),.segments(HEX1));
+hex_decoder h2(.hex_digit(raytest_data[11:8]),.segments(HEX2));
+hex_decoder h3(.hex_digit(raytest_data[15:12]),.segments(HEX3));
+hex_decoder h4(.hex_digit(raytest_data[19:16]),.segments(HEX4));
+hex_decoder h5(.hex_digit(raytest_data[23:20]),.segments(HEX5));
 
 //assign LEDR[8:0] = raytest_addr[8:0];
 
@@ -673,11 +683,11 @@ Computer_System The_System (
    .hps_io_hps_io_usb1_inst_CLK     (HPS_USB_CLKOUT),
    .hps_io_hps_io_usb1_inst_STP     (HPS_USB_STP),
    .hps_io_hps_io_usb1_inst_DIR     (HPS_USB_DIR),
-   .hps_io_hps_io_usb1_inst_NXT     (HPS_USB_NXT)
+   .hps_io_hps_io_usb1_inst_NXT     (HPS_USB_NXT),
    
    
-//   .sdr_clk_clk          (sdr_clk),
-//   .sdr_reset_export     (sdr_reset),
+   .sdr_clk_clk          (sdr_clk),
+   .sdr_reset_export     (sdr_reset),
 //   .sdr_baseaddr_export  (sdr_baseaddr),
 //   .sdr_nelems_export    (sdr_nelems),
 //   .sdr_readdata_export  (sdr_readdata),
@@ -689,6 +699,9 @@ Computer_System The_System (
 //   .start_rt_export      (start_rt),
 //   .end_rt_export        (end_rt),
 //   .end_rtstat_export    (end_rtstat)
+
+	 .raytest_export(raytest_vec),
+	 .raytest_en_export(raytest_en)
 );
 
 

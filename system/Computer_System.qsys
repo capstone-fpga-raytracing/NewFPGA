@@ -129,6 +129,14 @@
          type = "String";
       }
    }
+   element Computer_System
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
    element Expansion_JP1
    {
       datum _sortIndex
@@ -580,19 +588,11 @@
          type = "boolean";
       }
    }
-   element ray_tracer_0
+   element ray_tracer_1
    {
       datum _sortIndex
       {
          value = "31";
-         type = "int";
-      }
-   }
-   element ray_tracer_basic_0
-   {
-      datum _sortIndex
-      {
-         value = "32";
          type = "int";
       }
    }
@@ -617,6 +617,7 @@
  <parameter name="timeStamp" value="0" />
  <parameter name="useTestBenchNamingPattern" value="false" />
  <instanceScript></instanceScript>
+ <interface name="dbg_out" internal="ray_tracer_1.dbg_out" />
  <interface
    name="expansion_jp1"
    internal="Expansion_JP1.external_connection"
@@ -638,6 +639,16 @@
  <interface name="out_curr_addr" internal="avalon_sdr_0.current_address" />
  <interface name="out_data" internal="avalon_sdr_0.out_data" />
  <interface name="out_do_read" internal="avalon_sdr_0.out_do_read" />
+ <interface
+   name="raytest"
+   internal="ray_tracer_1.raytest"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="raytest_en"
+   internal="ray_tracer_1.raytest_en"
+   type="conduit"
+   dir="end" />
  <interface name="sdr_baseaddr" internal="avalon_sdr_0.sdr_baseaddr" />
  <interface
    name="sdr_clk"
@@ -1984,12 +1995,7 @@
   <parameter name="MAX_NREAD" value="64" />
   <parameter name="MAX_NWRITE" value="64" />
  </module>
- <module name="ray_tracer_0" kind="ray_tracer" version="1.0" enabled="0" />
- <module
-   name="ray_tracer_basic_0"
-   kind="ray_tracer_basic"
-   version="1.0"
-   enabled="1" />
+ <module name="ray_tracer_1" kind="ray_tracer" version="1.0" enabled="1" />
  <connection
    kind="avalon"
    version="18.0"
@@ -2446,16 +2452,7 @@
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
- <connection kind="avalon" version="18.0" start="ray_tracer_0.m0" end="SDRAM.s1">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="18.0"
-   start="ray_tracer_basic_0.m0"
-   end="SDRAM.s1">
+ <connection kind="avalon" version="18.0" start="ray_tracer_1.m0" end="SDRAM.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
@@ -2712,12 +2709,7 @@
    kind="clock"
    version="18.0"
    start="System_PLL.sys_clk"
-   end="ray_tracer_0.clock" />
- <connection
-   kind="clock"
-   version="18.0"
-   start="System_PLL.sys_clk"
-   end="ray_tracer_basic_0.clock" />
+   end="ray_tracer_1.clock" />
  <connection
    kind="clock"
    version="18.0"
@@ -2737,7 +2729,7 @@
    kind="conduit"
    version="18.0"
    start="avalon_control_0.end_rt"
-   end="ray_tracer_basic_0.end_rt">
+   end="ray_tracer_1.end_rt">
   <parameter name="endPort" value="" />
   <parameter name="endPortLSB" value="0" />
   <parameter name="startPort" value="" />
@@ -2747,7 +2739,7 @@
  <connection
    kind="conduit"
    version="18.0"
-   start="ray_tracer_basic_0.end_rtstat"
+   start="ray_tracer_1.end_rtstat"
    end="avalon_control_0.end_rtstat">
   <parameter name="endPort" value="" />
   <parameter name="endPortLSB" value="0" />
@@ -2758,7 +2750,7 @@
  <connection
    kind="conduit"
    version="18.0"
-   start="ray_tracer_basic_0.start_rt"
+   start="ray_tracer_1.start_rt"
    end="avalon_control_0.start_rt">
   <parameter name="endPort" value="" />
   <parameter name="endPortLSB" value="0" />
@@ -3179,12 +3171,7 @@
    kind="reset"
    version="18.0"
    start="System_PLL.reset_source"
-   end="ray_tracer_0.reset" />
- <connection
-   kind="reset"
-   version="18.0"
-   start="System_PLL.reset_source"
-   end="ray_tracer_basic_0.reset" />
+   end="ray_tracer_1.reset" />
  <connection
    kind="reset"
    version="18.0"

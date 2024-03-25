@@ -32,7 +32,8 @@ module cache_ro #(
         exist = 1'b0;
         if (tag [i_addr[BIT_INDEX-1:0]] == i_addr[BIT_TOTAL-1:BIT_INDEX] 
             && valid [i_addr[BIT_INDEX-1:0]]) begin
-            exist = 1'b1;
+            //exist = 1'b1;
+				exist = 1'b0;
         end
         if (i_en) begin
             if (i_wrt) begin: parse_write
@@ -65,7 +66,8 @@ module cache_ro #(
         end else if (read) begin: do_read
             valid [i_addr[BIT_INDEX-1:0]] <= 1'b1;
             o_data <= data [i_addr[BIT_INDEX-1:0]];
-            o_success <= 1'b1;
+            //o_success <= 1'b1;
+				o_success <= 1'b0;
         end
     end
 

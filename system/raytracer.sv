@@ -14,7 +14,10 @@ module ray_tracer
    output logic [1:0] avm_m0_byteenable,
    input logic avm_m0_waitrequest,
    output logic avm_m0_write,
-   output logic [15:0] avm_m0_writedata
+   output logic [15:0] avm_m0_writedata,
+	
+   output logic [32*7-1:0] raytest,
+	output logic raytest_en
 );
 
 // State table
@@ -49,6 +52,8 @@ logic [32*7-1:0] sdr_read_numtris_ray;
 logic            sdr_readend;
 logic            sdr_readstart;
 
+assign raytest = sdr_read_numtris_ray;
+
 
 logic [2047:0] sdr_writedata;
 logic          sdr_writestart;
@@ -65,9 +70,20 @@ logic signed [31:0] o_t;
 logic [31:0] o_tri_index;
 logic o_finish;
 
+//reg dbg_out_en;
+//reg [31:0] dbg_out_reg;
+//
+//always_ff @(posedge clk)
+//begin
+//	if (reset)
+//		dbg_out_reg <= 32'd0;
+//	else if (dbg_out_en)
+//		dbg_out_reg <= tri_cnt;
+//	else
+//		dbg_out_reg <= dbg_out_reg;
+//end
 
-
-
+//assign dbg_out = dbg_out_reg;
 
 always_comb 
 begin
@@ -85,6 +101,10 @@ begin
     tri_cnt <= 32'd0;
     tris_ivalid <= 1'b0;
 	 
+	 raytest_en <= 1'b0;
+	 
+	 
+	 //dbg_out_en <= 1'b0;
 
     case(cur_state)
         // Read first 7 words from SDRAM to send to tri_insector
@@ -99,7 +119,7 @@ begin
         READ_ASSERT: begin
             sdr_baseaddr <= 'b0;
             sdr_nelems <= 30'd7;
-            next_state <= sdr_readend ? TRI_INSECTOR : READ_ASSERT;
+            next_state <= sdr_readend ? TRI_INSECTOR_INIT : READ_ASSERT;
         end
         // After this state, the number of tris and ray are in sdr_read_numtris_ray 
         // and ready to be passed to tri_insector
@@ -111,6 +131,8 @@ begin
 				ray <= sdr_read_numtris_ray[32*6-1:0];
             // ntris is sdram[7]
             tri_cnt <= sdr_read_numtris_ray[32*7-1:32*6];
+				//dbg_out_en <= 1'b1;
+				raytest_en <= 1'b1;
 				next_state <= TRI_INSECTOR;
         end
 
@@ -142,7 +164,7 @@ begin
             if(o_hit) begin
                 // hit, number of elems to write is 3
                 sdr_nelems <= 30'd3;
-                sdr_writedata <= {o_hit, o_t, o_tri_index};
+                sdr_writedata <= {o_tri_index, o_t, {31'd0, o_hit}};
             end
             else begin
                 // no hit, number of elems to write is 1
@@ -273,7 +295,5 @@ tri_insector tri_insector_inst
 assign avm_m0_read = avm_m0_read_sdr | avm_m0_read_tri;
 assign avm_m0_address = avm_m0_address_sdr | avm_m0_address_tri;
 assign avm_m0_byteenable = avm_m0_byteenable_sdr | avm_m0_byteenable_tri;
-
-
 
 endmodule
