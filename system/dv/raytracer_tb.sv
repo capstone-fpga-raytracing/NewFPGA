@@ -1,3 +1,5 @@
+`define NTRIS 3
+
 module raytracer_tb();
     logic clk, reset;
     always #10 clk = ~clk;
@@ -36,20 +38,29 @@ module raytracer_tb();
     // tri[0:2]
     logic signed [31:0] i_tri [0:2][0:2][0:2];
     always_comb begin
+	 
+		  //i_ray[0] = { 464172, -223917, 486631 };
+		  //i_ray[1] = { -102879, 147806, -286155 };
     
         i_ray[0] = '{'b0, 'b0, 1 << 16};
         i_ray[1] = '{'b0, 'b0, -1 << 16};
          
+			
+		  //i_tri[0][0] = '{125935, 93832, 6586};
+        //i_tri[0][1] = '{289247, 80167, 13145};
+        //i_tri[0][2] = '{61876, 80167, 13145};
+        // expects result = 0, t = x (1)
+			
         // tri
-        i_tri[0][0] = '{'b0, 2 << 16, 'b0};
-        i_tri[0][1] = '{-2 << 16, -2 << 16, 'b0};
-        i_tri[0][2] = '{2 << 16, 2 << 16, 'b0};
-        // expects result = 1, t = 65536 (1)
-
-        i_tri[1][0] = '{'b0, 2 << 16, -2 << 16};
-        i_tri[1][1] = '{-2 << 16, -2 << 16, -2 << 16};
-        i_tri[1][2] = '{2 << 16, -2 << 16, -2 << 16};
+        i_tri[0][0] = '{'b0, 2 << 16, -2 << 16};
+        i_tri[0][1] = '{-2 << 16, -2 << 16, -2 << 16};
+        i_tri[0][2] = '{2 << 16, -2 << 16, -2 << 16};
         // expects result = 1, t = 196608 (3)
+		  
+		  i_tri[1][0] = '{'b0, 2 << 16, 'b0};
+        i_tri[1][1] = '{-2 << 16, -2 << 16, 'b0};
+        i_tri[1][2] = '{2 << 16, 2 << 16, 'b0};
+        // expects result = 1, t = 65536 (1)
 
         i_tri[2][0] = '{'b0, 2 << 16, 'b0};
         i_tri[2][1] = '{-2 << 16, 2 << 16, 'b0};
@@ -102,7 +113,7 @@ module raytracer_tb();
         clk = 'b1;
         reset = 'b1;
         start_rt = 1'b0;
-        avm_m0_readdata = 'b0;
+        avm_m0_readdata = 'hBEEF;
         avm_m0_readdatavalid = 'b0;
         avm_m0_waitrequest = 'b0;
         repeat(6) @(posedge clk);
@@ -116,7 +127,7 @@ module raytracer_tb();
         
         pass_ray();
 		  avm_m0_readdatavalid = 1'b1;
-		  avm_m0_readdata = 16'd3;
+		  avm_m0_readdata = 16'd`NTRIS;
 		  @(posedge clk);
 		  avm_m0_readdata = 16'd0;
 		  @(posedge clk);
@@ -124,7 +135,7 @@ module raytracer_tb();
         
         
         $display("[%0d]starting passing tri", $time());
-        pass_tri(3);
+        pass_tri(`NTRIS);
         $display("[%0d]passing tri end", $time());
 		  
 
