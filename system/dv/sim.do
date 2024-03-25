@@ -13,7 +13,7 @@ vlog ../avalon_sdr.sv
 vlog ../reader.sv
 vlog ../intersection.sv
 vlog ../raytracer.sv
-# vlog ../shading.sv
+vlog ../shading.sv
 
 
 
@@ -36,17 +36,18 @@ vlog raytracer_tb.sv
 # vsim fip_32_add_sat_tb
 # vsim fip_32_mult_tb
 # vsim fip_32_div_tb
+# vsim fip_32_vector_cross_tb
+# vsim fip_32_vector_dot_tb
 # vsim fip_32_sqrt_tb
 # vsim fip_32_3b3_det_tb
-# vsim fip_32_vector_cross_tb
 # vsim fip_32_vector_normal_tb
 
 # vsim cache_ro_tb
 # vsim cache_ro_multi_tb
 # vsim reader_tb
 # vsim intersection_tb
-# vsim tri_insector_tb
-vsim raytracer_tb
+vsim tri_insector_tb
+# vsim raytracer_tb
 # vsim bp_shading_tb
 # vsim bp_shading_light_tb
 

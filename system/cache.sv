@@ -33,11 +33,11 @@ module cache_ro #(
         if (tag [i_addr[BIT_INDEX-1:0]] == i_addr[BIT_TOTAL-1:BIT_INDEX] 
             && valid [i_addr[BIT_INDEX-1:0]]) begin
             //exist = 1'b1;
-				exist = 1'b0;
+			exist = 1'b1; // TEMP: bypass cache in batch mode
         end
         if (i_en) begin
             if (i_wrt) begin: parse_write
-                if (!exist) begin
+                if (~exist) begin
                     write = 1'b1;
                 end
             end else begin: parse_read
@@ -66,8 +66,7 @@ module cache_ro #(
         end else if (read) begin: do_read
             valid [i_addr[BIT_INDEX-1:0]] <= 1'b1;
             o_data <= data [i_addr[BIT_INDEX-1:0]];
-            //o_success <= 1'b1;
-				o_success <= 1'b0;
+            o_success <= 1'b1;
         end
     end
 
@@ -125,7 +124,7 @@ module cache_ro_multi #(
                         end
                     end
                     for (int way = 0; way < WAY; way += 1) begin: find_invalid
-                        if (!valid [i_addr[BIT_INDEX-1:0]][way]) begin
+                        if (~valid [i_addr[BIT_INDEX-1:0]][way]) begin
                             selected_way = way;
                         end
                     end

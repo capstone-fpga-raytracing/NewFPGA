@@ -1,12 +1,10 @@
-`timescale 1ns/1ns
-
 module cache_ro_tb();
     localparam SIZE_BLOCK = 32; // block size, in bits
     localparam BIT_TOTAL = 24; // addr length, MAX_INDEX = 1 << BIT_TOTAL
     localparam BIT_INDEX = 5; // index length
 
     logic clk;
-    always #5 clk = ~clk;
+    always #10 clk = ~clk;
     logic rst;
     logic en;
     logic wrt;
@@ -64,7 +62,8 @@ module cache_ro_tb();
         i_data = 'b0;
         repeat(5) @(posedge clk);
         rst = 0;
-        $display("TO DO: software cache yet to be implemented. all outputs are treated as errors");
+        $display("\n[%0d]cache_ro: test begin\n", $time());
+        $display("TO DO: reference not implemented. all outputs are treated as errors");
 
         test(1, 'd3, 'ha);
         test(0, 'd3, 'h0);
@@ -83,9 +82,8 @@ module cache_ro_tb();
         test(1, 'd64, 'h2);
         test(0, 'd64, 'h0);
 
-        // end
-        @(posedge clk);
-        //$display("[%0d]Test ends. All %0d test(s) passed.", $time(), test_index);
+        repeat(2) @(posedge clk);
+        $display("[%0d]cache_ro: test end\n", $time());
         $stop();
     end
 
@@ -99,7 +97,7 @@ module cache_ro_multi_tb();
     localparam WAY = 3; // # block in a set (set-associate)
 
     logic clk;
-    always #5 clk = ~clk;
+    always #10 clk = ~clk;
     logic rst;
     logic en;
     logic wrt;
@@ -157,7 +155,8 @@ module cache_ro_multi_tb();
         i_data = 'b0;
         repeat(5) @(posedge clk);
         rst = 0;
-        $display("TO DO: software cache yet to be implemented. all outputs are treated as errors");
+        $display("\n[%0d]cache_ro_multi: test begin\n", $time());
+        $display("TO DO: reference not implemented. all outputs are treated as errors");
 
         test(1, 'd3, 'ha);
         test(0, 'd3, 'h0);
@@ -180,9 +179,8 @@ module cache_ro_multi_tb();
         test(1, 'd256, 'h8);
         test(0, 'd256, 'h0);
 
-        // end
-        @(posedge clk);
-        //$display("[%0d]Test ends. All %0d test(s) passed.", $time(), test_index);
+        repeat(2) @(posedge clk);
+        $display("[%0d]cache_ro_multi: test end\n", $time());
         $stop();
     end
 

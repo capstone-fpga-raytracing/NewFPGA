@@ -5,6 +5,7 @@
 `define FIP_MIN 32'sh80000000
 `define FIP_MAX 32'sh7fffffff
 
+
 // overflow cut
 module fip_32_add_sat (
     input signed [31:0] i_x,
@@ -20,6 +21,7 @@ module fip_32_add_sat (
     end
 endmodule: fip_32_add_sat
 
+
 // overflow ignored
 module fip_32_mult #(
     parameter FRA_BITS = 16
@@ -33,6 +35,7 @@ module fip_32_mult #(
     assign o_z = temp_z[FRA_BITS+31:FRA_BITS];
 
 endmodule: fip_32_mult
+
 
 // overflow & underflow ignored if !SAT, else cut
 module fip_32_div #(
@@ -56,10 +59,15 @@ module fip_32_div #(
 
 endmodule: fip_32_div
 
-/* unused
+
+// TO DO: pipeline
 module fip_32_vector_cross(
+    input i_clk,
+    input i_rstn,
+    input i_en,
     input signed [31:0] i_array [0:1][0:2], // i_array[0] for vector 0
-    output logic signed [31:0] o_cross [0:2]
+    output logic signed [31:0] o_cross [0:2],
+    output logic o_valid
 );
     // i_array[0]: |a b c|
     // i_array[1]: |d e f|
@@ -76,11 +84,16 @@ module fip_32_vector_cross(
     assign o_cross = '{bf - ce, cd - af, ae - bd};
 
 endmodule: fip_32_vector_cross
-*/
 
+
+// TO DO: pipeline
 module fip_32_vector_dot(
+    input i_clk,
+    input i_rstn,
+    input i_en,
     input signed [31:0] i_array [0:1][0:2], // i_array[0] for vector 0
-    output logic signed [31:0] o_dot
+    output logic signed [31:0] o_dot,
+    output logic o_valid
 );
     // i_array[0]: |a b c|
     // i_array[1]: |d e f|
@@ -97,6 +110,8 @@ module fip_32_vector_dot(
 
 endmodule: fip_32_vector_dot
 
+
+// TO DO: finish (pipeline)
 module fip_32_sqrt #(
     parameter FRA_BITS = 16
 )(
@@ -105,13 +120,14 @@ module fip_32_sqrt #(
     input i_en,
     input [31:0] i_rad, // radicand
     output logic [31:0] o_root,
-    output logic o_valid // pipeline stage valid
+    output logic o_busy,
+    output logic o_valid
 );
-
-    // TO DO
 
 endmodule: fip_32_sqrt
 
+
+// TO DO: pipeline
 // accepts new inputs every cycle
 module fip_32_3b3_det(
     input i_clk,
@@ -119,7 +135,7 @@ module fip_32_3b3_det(
     input i_en,
     input signed [31:0] i_array [0:2][0:2], // could be row or column vectors
     output logic signed [31:0] o_det,
-    output logic o_valid // pipeline stage valid
+    output logic o_valid
 );
 
     /*
@@ -165,7 +181,7 @@ module fip_32_3b3_det(
 
     // stage control
     always_ff@(posedge i_clk) begin: pipeline
-        if (!i_rstn) begin
+        if (~i_rstn) begin
             rout_inter <= '{3{32'b0}};
             rout_array0 <= '{3{32'b0}};
             rout_det <= 'b0;
@@ -187,13 +203,16 @@ module fip_32_3b3_det(
 
 endmodule: fip_32_3b3_det
 
+
+// TO DO: pipeline
 module fip_32_vector_normal(
     input i_clk,
     input i_rstn,
     input i_en,
     input signed [31:0] i_vector [0:2],
     output logic signed [31:0] o_vector [0:2],
-    output logic o_valid // pipeline stage valid
+    output logic o_busy,
+    output logic o_valid
 );
 
     // procedure of normal:
@@ -209,9 +228,9 @@ module fip_32_vector_normal(
     assign sum2 = sum1 + square3;
 
     logic signed [31:0] sqrt_sum2;
-    logic drop; // not using pipeline
-    fip_32_sqrt sqrt_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
-                           .i_rad(sum2), .o_root(sqrt_sum2), .o_valid(drop));
+    logic [0:1] drop; // not using pipeline
+    fip_32_sqrt sqrt_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en), .i_rad(sum2),
+                           .o_root(sqrt_sum2), .o_busy(drop[0]), .o_valid(drop[1]));
 
     fip_32_div div_1_inst (.i_x(i_vector[0]), .i_y(sqrt_sum2), .o_z(o_vector[0]));
     fip_32_div div_2_inst (.i_x(i_vector[1]), .i_y(sqrt_sum2), .o_z(o_vector[1]));

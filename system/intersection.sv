@@ -1,16 +1,13 @@
-// intersection modules
+// intersection modules and tri_insector
 
 `define FIP_ONE 32'sh00010000
 `define FIP_MIN 32'sh80000000
 `define FIP_MAX 32'sh7fffffff
 
-
-// pipelined intersection, accepts new inputs every cycle
-
 typedef logic signed [31:0] fip;
 
 
-// pipelined intersection
+// pipelined intersection, accepts new inputs every cycle
 module intersection #(
     parameter signed MIN_T = 0
 ) (
@@ -21,7 +18,7 @@ module intersection #(
     input signed [31:0] i_ray [0:1][0:2], // i_ray[0]: origin(E), i_ray[1]: direction(D)
     output logic signed [31:0] o_t,
     output logic o_result,
-    output logic o_valid // pipeline stage valid
+    output logic o_valid
 );
 
     // procedure of intersection:
@@ -37,7 +34,7 @@ module intersection #(
         e_t = '{i_ray[0][0] - i_tri[0][0], i_ray[0][1] - i_tri[0][1], i_ray[0][2] - i_tri[0][2]};
         t1 = '{i_tri[1][0] - i_tri[0][0], i_tri[1][1] - i_tri[0][1], i_tri[1][2] - i_tri[0][2]};
         t2 = '{i_tri[2][0] - i_tri[0][0], i_tri[2][1] - i_tri[0][1], i_tri[2][2] - i_tri[0][2]};
-        _d = '{32'b0 - i_ray[1][0], 32'b0 - i_ray[1][1], 32'b0 - i_ray[1][2]};
+        _d = '{32'sb0 - i_ray[1][0], 32'sb0 - i_ray[1][1], 32'sb0 - i_ray[1][2]};
     end
 
     // stage1 reg
@@ -64,8 +61,8 @@ module intersection #(
     fip_32_add_sat add_sat_inst (.i_x(a), .i_y(b), .o_z(anb));
     logic result;
     always_comb begin
-        result = 1'b0;
-        if (coef != 0 && a[31] == 0 && b[31] == 0 && anb <= `FIP_ONE && t >= MIN_T) result = 1'b1;
+        if (|coef && a[31] == 1'b0 && b[31] == 1'b0 && anb <= `FIP_ONE && t >= MIN_T) result = 1'b1;
+        else result = 1'b0;
     end
 
     // stage3 reg
@@ -74,13 +71,13 @@ module intersection #(
 
     // stage control
     always_ff@(posedge i_clk) begin: pipeline
-        if (!i_rstn) begin
+        if (~i_rstn) begin
             rout_e_t <= '{3{32'b0}};
             rout_t1 <= '{3{32'b0}};
             rout_t2 <= '{3{32'b0}};
             rout__d <= '{3{32'b0}};
             rout_t <= 'b0;
-            rout_result <= 'b0;
+            rout_result <= 1'b0;
             valid <= 'b0;
         end else begin
             rout_e_t <= e_t;
@@ -105,6 +102,7 @@ module intersection #(
 endmodule: intersection
 
 
+/* unused
 // basic intersection (without pipeline)
 module bs_intersection #(
     parameter signed MIN_T = 0
@@ -116,25 +114,22 @@ module bs_intersection #(
     input signed [31:0] i_ray [0:1][0:2], // i_ray[0]: origin(E), i_ray[1]: direction(D)
     output logic signed [31:0] o_t,
     output logic o_result,
-    output logic o_valid // pipeline stage valid
+    output logic o_valid
 );
 
-    /*
-    T1 = i_tri[1] - i_tri[0]
-    T2 = i_tri[2] - i_tri[0]
+    // T1 = i_tri[1] - i_tri[0]
+    // T2 = i_tri[2] - i_tri[0]
 
-    |T1[0], T2[0], -D[0]|   |a|
-    |T1[1], T2[1], -D[1]| x |b| = E - i_tri[0]
-    |T1[2], T2[2], -D[2]|   |t|
+    // |T1[0], T2[0], -D[0]|   |a|
+    // |T1[1], T2[1], -D[1]| x |b| = E - i_tri[0]
+    // |T1[2], T2[2], -D[2]|   |t|
 
-    coef = det(T1, T2, E - i_tri[0])
-    a = det(E - i_tri[0], T2, -D)/coef
-    b = det(T1, E - i_tri[0], -D)/coef
-    t = det(T1, T2, -D)/coef
+    // coef = det(T1, T2, -D)
+    // a = det(E - i_tri[0], T2, -D)/coef
+    // b = det(T1, E - i_tri[0], -D)/coef
+    // t = det(T1, T2, E - i_tri[0])/coef
 
-    check: coef != 0, a >= 0, b >= 0, a + b <= 1, t >= MIN_T
-    normal: T1 x T2 (normalized)
-    */
+    // check: coef != 0, a >= 0, b >= 0, a + b <= 1, t >= MIN_T
 
     // preprocess
     logic signed [31:0] e_t [0:2], t1 [0:2], t2 [0:2], _d [0:2];
@@ -143,20 +138,20 @@ module bs_intersection #(
         e_t = '{i_ray[0][0] - i_tri[0][0], i_ray[0][1] - i_tri[0][1], i_ray[0][2] - i_tri[0][2]};
         t1 = '{i_tri[1][0] - i_tri[0][0], i_tri[1][1] - i_tri[0][1], i_tri[1][2] - i_tri[0][2]};
         t2 = '{i_tri[2][0] - i_tri[0][0], i_tri[2][1] - i_tri[0][1], i_tri[2][2] - i_tri[0][2]};
-        _d = '{32'b0 - i_ray[1][0], 32'b0 - i_ray[1][1], 32'b0 - i_ray[1][2]};
+        _d = '{32'sb0 - i_ray[1][0], 32'sb0 - i_ray[1][1], 32'sb0 - i_ray[1][2]};
     end
 
     // det
     logic signed [31:0] coef, det_a, det_b, det_t;
     logic [0:3] drop; // not using pipeline
     fip_32_3b3_det det_c_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
-                               .i_array('{t1, t2, e_t}), .o_det(coef), .o_valid(drop[0]));
+                               .i_array('{t1, t2, _d}), .o_det(coef), .o_valid(drop[0]));
     fip_32_3b3_det det_a_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
                                .i_array('{e_t, t2, _d}), .o_det(det_a), .o_valid(drop[1]));
     fip_32_3b3_det det_b_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
                                .i_array('{t1, e_t, _d}), .o_det(det_b), .o_valid(drop[2]));
     fip_32_3b3_det det_t_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
-                               .i_array('{t1, t2, _d}), .o_det(det_t), .o_valid(drop[3]));
+                               .i_array('{t1, t2, e_t}), .o_det(det_t), .o_valid(drop[3]));
 
     logic signed [31:0] a, b, t;
     fip_32_div #(.SAT(1)) div_a_inst (.i_x(det_a), .i_y(coef), .o_z(a));
@@ -169,11 +164,12 @@ module bs_intersection #(
     // result
     always_comb begin
         o_t = t;
-        o_result = 1'b0;
-        if (coef != 0 && a[31] == 0 && b[31] == 0 && anb <= `FIP_ONE && t >= MIN_T) o_result = 1'b1;
+        if (|coef && a[31] == 1'b0 && b[31] == 1'b0 && anb <= `FIP_ONE && t >= MIN_T) o_result = 1'b1;
+        else o_result = 1'b0;
     end
 
 endmodule: bs_intersection
+*/
 
 
 // fake intersection, for test only
@@ -187,7 +183,7 @@ module dummy_intersection #(
     input signed [31:0] i_ray [0:1][0:2], // i_ray[0]: origin(E), i_ray[1]: direction(D)
     output logic signed [31:0] o_t,
     output logic o_result,
-    output logic o_valid // pipeline stage valid
+    output logic o_valid
 );
 
     assign o_t = 'h00010002;
@@ -269,7 +265,7 @@ endmodule: ray_intersect_box
 */
 
 
-
+// wrapper of intersect and reader
 module tri_insector(
     input clk,
     input reset,
@@ -342,7 +338,7 @@ module tri_insector(
         .MIN_T(0)
     ) intersection_inst (
         .i_clk(clk),
-        .i_rstn(!reset),
+        .i_rstn(~reset),
         .i_en(reader_valid),
         .i_tri(reader_tri),
         .i_ray(ray),
@@ -356,7 +352,7 @@ module tri_insector(
     logic reg_hit;
     logic reg_fin_in, reg_fin_out; // state of counter into reader and outof intersection
 
-    assign reader_en = (reader_ready && !reg_fin_in) ? 1'b1 : 1'b0;
+    assign reader_en = (reader_ready && ~reg_fin_in) ? 1'b1 : 1'b0;
 
     always_ff@(posedge clk) begin
         if(reset) begin
@@ -376,7 +372,7 @@ module tri_insector(
             reg_fin_out <= 1'b0;
         end else begin
             // reader in
-            if (reader_ready && !reg_fin_in) begin
+            if (reader_ready && ~reg_fin_in) begin
                 if(reg_tri_cnt_in) begin
                     reg_tri_cnt_in <= reg_tri_cnt_in-1;
                 end else begin
@@ -384,7 +380,7 @@ module tri_insector(
                 end
             end
             // intersection out
-            if (inter_valid && !reg_fin_out) begin
+            if (inter_valid && ~reg_fin_out) begin
                 if (hit && t < reg_t_min) begin
                     reg_t_min <= t;
                     reg_tri_idx_min <= reg_tri_cnt_out;

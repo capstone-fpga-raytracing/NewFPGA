@@ -1,10 +1,10 @@
-// basic fip operations, testbench
-`timescale 1ns/1ns
+// basic fip operations testbench
 
 `define TRUE 1
 `define FALSE 0
 `define FIP_MIN 32'sh80000000
 `define FIP_MAX 32'sh7fffffff
+
 
 module fip_32_add_sat_tb();
     logic signed [31:0] x, y, sum;
@@ -16,6 +16,8 @@ module fip_32_add_sat_tb();
     );
 
     initial begin
+        $display("\n[%0d]fip_32_add_sat: test begin\n", $time());
+
         // overflow & underflow cut
 
         // Test 1: Simple addition
@@ -42,13 +44,15 @@ module fip_32_add_sat_tb();
         #10;
         // Expected: underflow, sum cut to FIP_MIN
 
-        $stop;
+        $display("[%0d]fip_32_add_sat: test end\n", $time());
+        $stop();
     end
 
 endmodule: fip_32_add_sat_tb
 
+
 module fip_32_mult_tb();
-    parameter FRA_BITS = 16; // For Q16.16 fixed-point format
+    localparam FRA_BITS = 16; // For Q16.16 fixed-point format
     logic signed [31:0] x, y, prod;
 
     fip_32_mult #(
@@ -60,6 +64,8 @@ module fip_32_mult_tb();
     );
 
     initial begin
+        $display("\n[%0d]fip_32_mult: test begin\n", $time());
+
         // overflow ignored
 
         // Test 1: Simple multiplication without overflow
@@ -92,14 +98,16 @@ module fip_32_mult_tb();
         #10;
         // Expected: prod is a very small positive fraction in Q16.16 (0x00000000 or 0 as signed integer), overflow = 0
 
-        $stop;
+        $display("[%0d]fip_32_mult: test end\n", $time());
+        $stop();
     end
 
 endmodule: fip_32_mult_tb
 
+
 module fip_32_div_tb();
-    parameter SAT = `TRUE; // For saturation against overflow/underflow
-    parameter FRA_BITS = 16; // For Q16.16 fixed-point format
+    localparam SAT = `TRUE; // For saturation against overflow/underflow
+    localparam FRA_BITS = 16; // For Q16.16 fixed-point format
     logic signed [31:0] x, y, quotient;
 
     fip_32_div #(
@@ -112,6 +120,8 @@ module fip_32_div_tb();
     );
 
     initial begin
+        $display("\n[%0d]fip_32_div: test begin\n", $time());
+
         // no overflow or underflow
 
         // Test 1: Division of integer numbers without overflow
@@ -154,59 +164,122 @@ module fip_32_div_tb();
         #10;
         // Expected: underflow, quotient cut to FIP_MIN
 
-        $stop;
+        $display("[%0d]fip_32_div: test end\n", $time());
+        $stop();
     end
 
 endmodule: fip_32_div_tb
 
-/* unused
+
 module fip_32_vector_cross_tb();
     logic signed [31:0] i_array [0:1][0:2];
     logic signed [31:0] o_cross [0:2];
+    logic valid;
+    logic clk, rstn, en;
+    always #10 clk = ~clk;
 
     fip_32_vector_cross dut (
-        .i_clk(1'b0),
-        .i_rstn(1'b1),
-        .i_en(1'b1),
+        .i_clk(clk),
+        .i_rstn(rstn),
+        .i_en(en),
         .i_array(i_array),
-        .o_cross(o_cross)
+        .o_cross(o_cross),
+        .o_valid(valid)
     );
 
     initial begin
+        clk = 1'b1;
+        rstn = 1'b0;
+        en = 1'b0;
+        repeat(3) @(posedge clk);
+        rstn = 1'b1;
+        $display("\n[%0d]fip_32_vector_cross: test begin\n", $time());
+
         // TO DO: add test cases here
+
+        repeat(3) @(posedge clk);
+        $display("[%0d]fip_32_vector_cross: test end\n", $time());
+        $stop();
     end
 
 endmodule: fip_32_vector_cross_tb
-*/
+
 
 module fip_32_vector_dot_tb();
     logic signed [31:0] i_array [0:1][0:2];
     logic signed [31:0] o_dot;
+    logic valid;
+    logic clk, rstn, en;
+    always #10 clk = ~clk;
 
     fip_32_vector_dot dut (
+        .i_clk(clk),
+        .i_rstn(rstn),
+        .i_en(en),
         .i_array(i_array),
-        .o_dot(o_dot)
+        .o_dot(o_dot),
+        .o_valid(valid)
     );
 
     initial begin
+        clk = 1'b1;
+        rstn = 1'b0;
+        en = 1'b0;
+        repeat(3) @(posedge clk);
+        rstn = 1'b1;
+        $display("\n[%0d]fip_32_vector_dot: test begin\n", $time());
+
         // TO DO: add test cases here
+
+        repeat(3) @(posedge clk);
+        $display("[%0d]fip_32_vector_dot: test end\n", $time());
+        $stop();
     end
 
 endmodule: fip_32_vector_dot_tb
 
+
 module fip_32_sqrt_tb();
-    // TO DO: add inst
+    localparam FRA_BITS = 16; // For Q16.16 fixed-point format
+    logic [31:0] rad, root;
+    logic valid, busy;
+    logic clk, rstn, en;
+    always #10 clk = ~clk;
+
+    fip_32_sqrt #(
+        .FRA_BITS(FRA_BITS)
+    ) dut (
+        .i_clk(clk),
+        .i_rstn(rstn),
+        .i_en(en),
+        .i_rad(rad),
+        .o_root(root),
+        .o_busy(busy),
+        .o_valid(valid)
+    );
 
     initial begin
+        clk = 1'b1;
+        rstn = 1'b0;
+        en = 1'b0;
+        repeat(5) @(posedge clk);
+        rstn = 1'b1;
+        $display("\n[%0d]fip_32_sqrt: test begin\n", $time());
+
         // TO DO: add test cases here
+
+        repeat(30) @(posedge clk);
+        $display("[%0d]fip_32_sqrt: test end\n", $time());
+        $stop();
     end
 
 endmodule: fip_32_sqrt_tb
 
+
 module fip_32_3b3_det_tb();
     logic signed [31:0] i_array [0:2][0:2];
     logic signed [31:0] o_det;
-    logic o_valid;
+    logic valid;
     logic clk, rstn, en;
     always #10 clk = ~clk;
 
@@ -216,90 +289,86 @@ module fip_32_3b3_det_tb();
         .i_en(en),
         .i_array(i_array),
         .o_det(o_det),
-        .o_valid(o_valid)
+        .o_valid(valid)
     );
 
     initial begin
         clk = 1'b1;
         rstn = 1'b0;
         en = 1'b0;
-        repeat(3) @(posedge clk);
+        repeat(5) @(posedge clk);
         rstn = 1'b1;
+        $display("\n[%0d]fip_32_3b3_det: test begin\n", $time());
+        
         en = 1'b1;
 
         // Test 1: Determinant of an identity matrix
-        i_array[0][0] = 1 << 16;       // 1 in Q16.16 (65536)
-        i_array[0][1] = 0;        // 0 (0)
-        i_array[0][2] = 0;        // 0 (0)
-
-        i_array[1][0] = 0;        // 0 (0)
-        i_array[1][1] = 1 << 16;       // 1 in Q16.16 (65536)
-        i_array[1][2] = 0;        // 0 (0)
-
-        i_array[2][0] = 0;        // 0 (0)
-        i_array[2][1] = 0;        // 0 (0)
-        i_array[2][2] = 1 << 16;       // 1 in Q16.16 (65536)
+        i_array[0] = '{1 << 16, 'b0, 'b0};
+        i_array[1] = '{'b0, 1 << 16, 'b0};
+        i_array[2] = '{'b0, 'b0, 1 << 16};
         @(posedge clk);
         // Expected: o_det = 1 in Q16.16 (65536) with no overflow
 
         // Test 2: Enable off
-        en = 'b0;
+        en = 1'b0;
         @(posedge clk);
-        // Expected: valid off in one pipeline stage
-        en = 'b1;
+        // Expected: one invalid cycle
+        en = 1'b1;
 
         // Test 3: Determinant with random values
-        i_array[0][0] = 1 << 16; // 1 in Q16.16 (65536)
-        i_array[0][1] = 2 << 16; // 2 in Q16.16 (131072)
-        i_array[0][2] = 3 << 16; // 3 in Q16.16 (196608)
-
-        i_array[1][0] = 4 << 16; // 4 in Q16.16 (262144)
-        i_array[1][1] = 5 << 16; // 5 in Q16.16 (327680)
-        i_array[1][2] = 6 << 16; // 6 in Q16.16 (393216)
-
-        i_array[2][0] = 7 << 16; // 7 in Q16.16 (458752)
-        i_array[2][1] = 8 << 16; // 8 in Q16.16 (524288)
-        i_array[2][2] = 9 << 16; // 9 in Q16.16 (589824)
+        i_array[0] = '{1 << 16, 2 << 16, 3 << 16};
+        i_array[1] = '{4 << 16, 5 << 16, 6 << 16};
+        i_array[2] = '{7 << 16, 8 << 16, 9 << 16};
         @(posedge clk);
         // Expected: o_det = 0 with no overflow (since the matrix is singular)
 
         // Test 4: Determinant with some negative values
-        i_array[0][0] = 1 << 16; // 1 in Q16.16 (65536)
-        i_array[0][1] = -1 << 16; // -1 in Q16.16 (-65536)
-        i_array[0][2] = 3 << 16; // 3 in Q16.16 (196608)
-
-        i_array[1][0] = 4 << 16; // 4 in Q16.16 (262144)
-        i_array[1][1] = 5 << 16; // 5 in Q16.16 (327680)
-        i_array[1][2] = 6 << 16; // 6 in Q16.16 (393216)
-
-        i_array[2][0] = 7 << 16; // 7 in Q16.16 (458752)
-        i_array[2][1] = 8 << 16; // 8 in Q16.16 (524288)
-        i_array[2][2] = 9 << 16; // 9 in Q16.16 (589824)
+        i_array[0] = '{1 << 16, -1 << 16, 3 << 16};
+        i_array[1] = '{4 << 16, 5 << 16, 6 << 16};
+        i_array[2] = '{7 << 16, 8 << 16, 9 << 16};
         @(posedge clk);
         // Expected: o_det = -18 in Q16.16 (-1179648) with no overflow
 
-        en = 'b0;
-        repeat(3) @(posedge clk);
-        
-        $stop;
+        en = 1'b0;
+
+        repeat(5) @(posedge clk);
+        $display("[%0d]fip_32_3b3_det: test end\n", $time());
+        $stop();
     end
 
 endmodule: fip_32_3b3_det_tb
 
+
 module fip_32_vector_normal_tb();
     logic signed [31:0] i_vector [0:2];
     logic signed [31:0] o_vector [0:2];
+    logic valid, busy;
+    logic clk, rstn, en;
+    always #10 clk = ~clk;
 
     fip_32_vector_normal dut (
-        .i_clk(1'b0),
-        .i_rstn(1'b1),
-        .i_en(1'b1),
+        .i_clk(clk),
+        .i_rstn(rstn),
+        .i_en(en),
         .i_vector(i_vector),
-        .o_vector(o_vector)
+        .o_vector(o_vector),
+        .o_busy(busy),
+        .o_valid(valid)
     );
 
     initial begin
+        clk = 1'b1;
+        rstn = 1'b0;
+        en = 1'b0;
+        repeat(5) @(posedge clk);
+        rstn = 1'b1;
+        $display("\n[%0d]fip_32_vector_normal: test begin\n", $time());
+
         // TO DO: add test cases here
+
+        repeat(40) @(posedge clk);
+        $display("[%0d]fip_32_vector_normal: test end\n", $time());
+        $stop();
     end
 
 endmodule: fip_32_vector_normal_tb

@@ -5,7 +5,7 @@
 `define MAX_LIGHT_SRC 8
 
 
-// TO DO
+// TO DO:
 // implement and test bs / pl sqrt
 // test and add bs_bp_shading_light to bs_bp_shading
 // test bs_bp_shading
@@ -24,12 +24,11 @@ module bs_bp_shading #(
     input signed [31:0] i_tri [0:2][0:2], // i_tri[0]: vertex 0
     input signed [31:0] i_mat [0:2][0:2], // i_mat[0]: ka, i_mat[1]: kd, i_mat[2]: ks
     input signed [31:0] i_ray [0:1][0:2], // i_ray[0]: origin(E), i_ray[1]: direction(D)
-    input signed [31:0] i_light [0:MAX_L-1][0:1][0:2], // i_light[id][0]: source, i_light[id][1]: color
     input [LEN_L-1:0] i_num_lights, // number of light sources
     input signed [31:0] i_dist, // hit distance
     output logic signed [31:0] o_light [0:2], // RGB in fip, in range [0, 1)
-    output logic o_busy, // does not accept new input
-    output logic o_valid // pipeline stage valid
+    output logic o_busy,
+    output logic o_valid
 );
 
     // normal
@@ -52,9 +51,9 @@ module bs_bp_shading #(
     assign normal_raw[2] = normal_temp[2][0] - normal_temp[2][1];
 
     logic signed [31:0] normal [0:2];
-    logic normal_tri_drop; // not using pipeline
-    fip_32_vector_normal normal_tri_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
-                                          .i_vector(normal_raw), .o_vector(normal), .o_valid(normal_tri_drop));
+    logic [0:1] normal_tri_drop; // not using pipeline
+    fip_32_vector_normal normal_tri_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en), .i_vector(normal_raw),
+                                          .o_vector(normal), .o_busy(normal_tri_drop[0]), .o_valid(normal_tri_drop[1]));
 
     // hit point
     logic signed [31:0] hit_point_temp [0:2];
@@ -99,8 +98,8 @@ module bs_bp_shading_light(
     input signed [31:0] i_mat [0:2][0:2], // i_mat[0]: ka, i_mat[1]: kd, i_mat[2]: ks
     input signed [31:0] i_light [0:1][0:2], // i_light[0]: source, i_light[1]: color
     output logic signed [31:0] o_light [0:2], // RGB in fip, not cut
-    output logic o_busy, // does not accept new input
-    output logic o_valid // pipeline stage valid
+    output logic o_busy,
+    output logic o_valid
 );
 
     // direction
@@ -112,15 +111,17 @@ module bs_bp_shading_light(
     };
 
     logic signed [31:0] dir;
-    logic normal_dir_drop; // not using pipeline
-    fip_32_vector_normal normal_tri_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
-                                          .i_vector(dir_raw), .o_vector(dir), .o_valid(normal_dir_drop));
+    logic [0:1] normal_dir_drop; // not using pipeline
+    fip_32_vector_normal normal_tri_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en), .i_vector(dir_raw),
+                                          .o_vector(dir), .o_busy(normal_dir_drop[0]), .o_valid(normal_dir_drop[1]));
 
     // shadow: ignored for now
 
     // diffuse
     logic signed [31:0] diff_light_term_raw;
-    fip_32_vector_dot dot_inst (.i_array('{normal, dir}), .o_dot(diff_light_term_raw));
+    logic dot_drop; // not using pipeline
+    fip_32_vector_dot dot_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
+                                .i_array('{normal, dir}), .o_dot(diff_light_term_raw), .o_valid(dot_drop));
 
     logic signed [31:0] diff_light_term;
     always_comb begin

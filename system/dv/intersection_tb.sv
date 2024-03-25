@@ -1,10 +1,9 @@
 module intersection_tb();
-
     localparam signed MIN_T = 0;
     logic signed [31:0] i_tri [0:2][0:2]; // i_tri[0] for vertex 0
     logic signed [31:0] i_ray [0:1][0:2]; // i_ray[0] for origin(E), i_ray[1] for direction(D)
     logic signed [31:0] o_t;
-    logic o_result, o_valid;
+    logic o_result, valid;
     logic clk, rstn, en;
     always #10 clk = ~clk;
 
@@ -18,7 +17,7 @@ module intersection_tb();
         .i_ray(i_ray),
         .o_t(o_t),
         .o_result(o_result),
-        .o_valid(o_valid)
+        .o_valid(valid)
     );
 
     int test_index;
@@ -53,7 +52,6 @@ module intersection_tb();
     end
     endtask
 
-
     initial begin
         clk = 1'b1;
         rstn = 1'b0;
@@ -63,31 +61,17 @@ module intersection_tb();
         test_index = 'd0;
         $display("\n[%0d]intersection: test begin\n", $time());
 
-        // example
-        i_tri[0][0] = 1 << 16;
-        i_tri[0][1] = 1 << 16;
-        i_tri[0][2] = 1 << 16;
-
-        i_tri[1][0] = 2 << 16;
-        i_tri[1][1] = 3 << 16;
-        i_tri[1][2] = 2 << 16;
-
-        i_tri[2][0] = 1 << 16;
-        i_tri[2][1] = 1 << 16;
-        i_tri[2][2] = 3 << 16;
-
-        i_ray[0][0] = 0 << 16;
-        i_ray[0][1] = 1 << 16;
-        i_ray[0][2] = 1 << 16;
-
-        i_ray[1][0] = 3 << 16;
-        i_ray[1][1] = 0.5 * (1 << 16);
-        i_ray[1][2] = 1.5 * (1 << 16);
-
+        i_tri[0] = '{1 << 16, 1 << 16, 1 << 16};
+        i_tri[1] = '{2 << 16, 3 << 16, 2 << 16};
+        i_tri[2] = '{1 << 16, 1 << 16, 3 << 16};
+        i_ray[0] = '{'b0, 1 << 16, 1 << 16};
+        i_ray[1] = '{3 << 16, 0.5 * (1 << 16), 1.5 * (1 << 16)};
         test();
-        // expects result = 1, t = 180224 (2.75)
+        // expects result = 1, t = 23831 (4/11)
 
         @(posedge clk);
+        // expects one invalid cycle
+
         i_tri[0] = '{'b0, 2 << 16, 'b0};
         i_tri[1] = '{-2 << 16, -2 << 16, 'b0};
         i_tri[2] = '{2 << 16, 2 << 16, 'b0};
@@ -112,7 +96,6 @@ module intersection_tb();
         test();
         // expects result = 0, t = x (default in simulation of div by 0)
 
-
         i_tri[0] = '{'b0, 2 << 16, 'b0};
         i_tri[1] = '{-2 << 16, -2 << 16, 'b0};
         i_tri[2] = '{2 << 16, -2 << 16, 'b0};
@@ -125,6 +108,7 @@ module intersection_tb();
         $display("[%0d]intersection: test end\n", $time());
         $stop();
     end
+
 endmodule: intersection_tb
 
 
@@ -139,7 +123,7 @@ module tri_insector_tb();
     logic o_hit;
     logic signed [31:0] o_t;
     logic [31:0] o_tri_index;
-    logic o_finish;
+    logic finish;
 
     logic o_ram_rd;
     logic [31:0] o_ram_addr;
@@ -158,7 +142,7 @@ module tri_insector_tb();
         .o_hit(o_hit),
         .o_t(o_t),
         .o_tri_index(o_tri_index),
-        .o_finish(o_finish),
+        .o_finish(finish),
 
         .avm_m0_read(o_ram_rd),
         .avm_m0_address(o_ram_addr),
@@ -192,9 +176,9 @@ module tri_insector_tb();
         input int tri_num); begin
 
         for(int i = 0; i < tri_num; i+=1) begin
-            while(!o_ram_rd) @(posedge clk);
+            while(~o_ram_rd) @(posedge clk);
             i_ram_valid = 'b1;
-            $display("[%d]starting tri: %0d", $time(), i);
+            $display("[%0d]starting tri: %0d", $time(), i);
             for(int j = 0; j < 3; j+=1) begin
                 for(int k = 0; k < 3; k+=1) begin
                     i_ram_data = i_tri[i][j][k][15:0];
@@ -219,9 +203,10 @@ module tri_insector_tb();
         repeat(6) @(posedge clk);
         reset = 'b0;
         repeat(6) @(posedge clk);
+        $display("\n[%0d]tri_insector: test begin\n", $time());
 
         // set en, baseaddr, i_ray, i_tri_cnt, i_ram_data, i_ram_valid
-        // monitor o_hit, o_t, o_tri_index, o_finish, o_ram_rd, o_ram_addr
+        // monitor o_hit, o_t, o_tri_index, finish, o_ram_rd, o_ram_addr
 
         // start
         //ray[0] = '{'b0, 'b0, 1 << 16};
@@ -242,9 +227,9 @@ module tri_insector_tb();
         pass_tri(3);
         $display("[%0d]passing tri end", $time());
 
-        repeat(20) @(posedge clk);
-
+        repeat(10) @(posedge clk);
         $display("[%0d]tri_insector: test end\n", $time());
         $stop();
     end
+
 endmodule: tri_insector_tb
