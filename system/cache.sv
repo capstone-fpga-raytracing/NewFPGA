@@ -33,7 +33,7 @@ module cache_ro #(
         if (tag [i_addr[BIT_INDEX-1:0]] == i_addr[BIT_TOTAL-1:BIT_INDEX] 
             && valid [i_addr[BIT_INDEX-1:0]]) begin
             //exist = 1'b1;
-			exist = 1'b1; // TEMP: bypass cache in batch mode
+			exist = 1'b0; // TEMP: bypass cache in batch mode
         end
         if (i_en) begin
             if (i_wrt) begin: parse_write

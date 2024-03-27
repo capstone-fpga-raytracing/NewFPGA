@@ -46,8 +46,8 @@ vlog raytracer_tb.sv
 # vsim cache_ro_multi_tb
 # vsim reader_tb
 # vsim intersection_tb
-vsim tri_insector_tb
-# vsim raytracer_tb
+# vsim tri_insector_tb
+vsim raytracer_tb
 # vsim bp_shading_tb
 # vsim bp_shading_light_tb
 
