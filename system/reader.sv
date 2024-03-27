@@ -141,7 +141,8 @@ localparam CHECK_CACHE1 = 3'd0,
            SDRAM_RDASSERT = 3'd2,
            CHECK_CACHE_PENDING1 = 3'd3,
            CHECK_CACHE_PENDING2 = 3'd4,
-           SDRAM_RDASSERT_PENDING = 3'd5;
+           SDRAM_RDASSERT_PENDING = 3'd5,
+           CHECK_CACHE0 = 3'd6;
 
 logic [2:0] cur_state, next_state;
 
@@ -207,7 +208,7 @@ begin
             end else begin
                t_selidx <= 2'd0; // index
                t_selidx_en <= 1'b1;
-               next_state <= CHECK_CACHE1;
+               next_state <= CHECK_CACHE0;
             end
          end
       end
@@ -225,7 +226,7 @@ begin
             t_selidx <= 2'd0; // index
             t_selidx_en <= 1'b1;
             pending_rq_reset <= 1'b1;
-            next_state <= CHECK_CACHE1;
+            next_state <= CHECK_CACHE0;
          end else begin
             mem_readstart <= 1'b1;
             next_state <= SDRAM_RDASSERT_PENDING;
@@ -242,8 +243,12 @@ begin
             t_selidx <= 2'd0; // index
             t_selidx_en <= 1'b1;
             pending_rq_reset <= 1'b1;
-            next_state <= CHECK_CACHE1;
+            next_state <= CHECK_CACHE0;
          end
+      end
+
+      CHECK_CACHE0: begin
+         next_state <= CHECK_CACHE1;
       end
    endcase
 
