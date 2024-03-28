@@ -69,8 +69,9 @@ module intersection #(
     fip_32_add_sat add_sat_inst (.i_x(a), .i_y(b), .o_z(anb));
     logic result;
     always_comb begin
-        if (|coef && a[31] == 1'b0 && b[31] == 1'b0 && anb <= `FIP_ONE && t >= MIN_T) result = 1'b1;
-        else result = 1'b0;
+        if (coef != 32'd0 && a[31] == 1'b0 && b[31] == 1'b0 && ~(anb > `FIP_ONE) && t[31] == 1'b0) 
+				result <= 1'b1;
+        else result <= 1'b0;
     end
 
     // stage3 reg
