@@ -16,7 +16,7 @@ module ray_tracer
    output logic avm_m0_write,
    output logic [15:0] avm_m0_writedata,
 	
-   output logic [32*7-1:0] raytest,
+   output logic [32*4-1:0] raytest,
 	output logic raytest_en
 );
 
@@ -52,7 +52,7 @@ logic [32*7-1:0] sdr_read_numtris_ray;
 logic            sdr_readend;
 logic            sdr_readstart;
 
-assign raytest = sdr_read_numtris_ray;
+//assign raytest = sdr_read_numtris_ray;
 
 
 logic [2047:0] sdr_writedata;
@@ -101,7 +101,7 @@ begin
     tri_cnt <= 32'd0;
     tris_ivalid <= 1'b0;
 	 
-	 raytest_en <= 1'b0;
+	 //raytest_en <= 1'b0;
 	 
 	 
 	 //dbg_out_en <= 1'b0;
@@ -132,7 +132,7 @@ begin
             // ntris is sdram[7]
             tri_cnt <= sdr_read_numtris_ray[32*7-1:32*6];
 				//dbg_out_en <= 1'b1;
-				raytest_en <= 1'b1;
+				//raytest_en <= 1'b1;
 				next_state <= TRI_INSECTOR;
         end
 
@@ -288,7 +288,10 @@ tri_insector tri_insector_inst
     .avm_m0_readdata(avm_m0_readdata),
     .avm_m0_readdatavalid(avm_m0_readdatavalid),
     .avm_m0_byteenable(avm_m0_byteenable_tri),
-    .avm_m0_waitrequest(avm_m0_waitrequest)
+    .avm_m0_waitrequest(avm_m0_waitrequest),
+	 
+	 .dbg_out(raytest),
+	 .dbg_out_en(raytest_en)
 );
 
 

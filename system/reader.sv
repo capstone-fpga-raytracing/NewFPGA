@@ -162,6 +162,7 @@ begin
    mem_readstart <= 1'b0;
    pending_rq_en <= 1'b0;
    pending_rq_reset <= 1'b0;
+	//ovalid <= 1'b0;
    
    t_selidx <= 2'd0;
    t_selidx_en <= 1'b0;
@@ -181,7 +182,7 @@ begin
          cache_op <= 1'b0;
          iready <= 1'b1;
          
-         if (!ovalid) // success from cache
+         if (!ovalid) // no success from cache? // todo
          begin
             // is there an extra request?
             pending_rq_en <= read;
@@ -222,7 +223,7 @@ begin
       
       CHECK_CACHE_PENDING2:
       begin
-         if (ovalid) begin
+         if (ovalid) begin // todo
             t_selidx <= 2'd0; // index
             t_selidx_en <= 1'b1;
             pending_rq_reset <= 1'b1;

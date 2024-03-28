@@ -18,7 +18,10 @@ module intersection #(
     input signed [31:0] i_ray [0:1][0:2], // i_ray[0]: origin(E), i_ray[1]: direction(D)
     output logic signed [31:0] o_t,
     output logic o_result,
-    output logic o_valid
+    output logic o_valid,
+	 
+	 output logic [32*4-1:0] dbg_out,
+	 output logic dbg_out_en
 );
 
     // procedure of intersection:
@@ -39,6 +42,8 @@ module intersection #(
 
     // stage1 reg
     logic signed [31:0] rout_e_t [0:2], rout_t1 [0:2], rout_t2 [0:2], rout__d [0:2];
+	 
+	 
 
     // stage2 (multi): det
     logic signed [31:0] coef, det_a, det_b, det_t;
@@ -51,6 +56,9 @@ module intersection #(
                                .i_array('{rout_t1, rout_e_t, rout__d}), .o_det(det_b), .o_valid(drop[1]));
     fip_32_3b3_det det_t_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
                                .i_array('{rout_t1, rout_t2, rout_e_t}), .o_det(det_t), .o_valid(drop[2]));
+										 
+	 assign dbg_out = { 32'd0, 32'd0, o_t, {31'd0, o_result}};
+	 assign dbg_out_en = valid[1];								 
 
     // stage3: result
     logic signed [31:0] a, b, t;
@@ -285,7 +293,10 @@ module tri_insector(
     input  [15:0]        avm_m0_readdata,
     input                avm_m0_readdatavalid,
     output logic [1:0]   avm_m0_byteenable,
-    input                avm_m0_waitrequest
+    input                avm_m0_waitrequest,
+	 
+	 output logic [32*4-1:0] dbg_out,
+	 output logic dbg_out_en
 );
 
     logic reader_en, reader_ready, reader_valid;
@@ -311,6 +322,9 @@ module tri_insector(
         .avm_m0_byteenable(avm_m0_byteenable),
         .avm_m0_waitrequest(avm_m0_waitrequest)
     );
+	 
+	 //assign dbg_out = reader_data;
+	 //assign dbg_out_en = reader_valid;
 
     logic signed [31:0] reader_tri [0:2][0:2];
     genvar i, j;
@@ -344,7 +358,9 @@ module tri_insector(
         .i_ray(ray),
         .o_t(t),
         .o_result(hit),
-        .o_valid(inter_valid)
+        .o_valid(inter_valid),
+		  .dbg_out(dbg_out),
+		  .dbg_out_en(dbg_out_en)
     );
 
     logic [31:0] reg_tri_cnt_out, reg_tri_idx_min;

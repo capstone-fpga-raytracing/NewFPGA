@@ -459,16 +459,34 @@ logic sdr_clk;
 logic sdr_reset;
 logic raytest_en;
 
-logic raytest;
+logic start_raytest;
 
-logic [223:0] raytest_vec;
+logic [32*4-1:0] raytest_wire;
+logic [32*4-1:0] raytest_vec;
 
- always_ff @(posedge sdr_clk or posedge sdr_reset) begin
-    if (sdr_reset)
-       raytest = 1'b0;
-    else if (raytest_en)
-       raytest = 1'b1;
-    else raytest <= raytest;
+always_ff @(posedge sdr_clk) begin
+	if (sdr_reset) 
+		raytest_vec <= 'd0;
+	else if (raytest_en) 
+		raytest_vec <= raytest_wire;
+	else
+		raytest_vec <= raytest_vec;
+end
+
+reg more_than_one;
+
+ always_ff @(posedge sdr_clk) begin
+    if (sdr_reset) begin
+       start_raytest <= 1'b0;
+		 more_than_one <= 1'b0;
+	 end
+    else if (raytest_en) begin
+		if (start_raytest == 1'b1)
+			more_than_one <= 1'b1;
+
+		start_raytest <= 1'b1;		 
+	 end
+    else start_raytest <= start_raytest;
  end
 
 //logic rt_done;
@@ -488,7 +506,7 @@ rate_divider rd ( CLOCK_50, raytest_clk);
        //rt_done <= 1'b0;
        //rd_reset <= 1'b0;
     end else if (raytest_clk) begin
-       if (raytest && raytest_addr != 10'd7) begin    
+       if (start_raytest && raytest_addr != 10'd4) begin    
              raytest_data <= raytest_vec[32*raytest_addr +: 32];
              raytest_addr <= raytest_addr + 10'd1;
           //   sdr_writestart <= 1'b0;
@@ -501,7 +519,7 @@ rate_divider rd ( CLOCK_50, raytest_clk);
     end
  end
 
-//assign LEDR[3] = rt_done;
+assign LEDR[0] = more_than_one;
 
 
 //logic [31:0] sdr_finaladdr;
@@ -700,7 +718,7 @@ Computer_System The_System (
 //   .end_rt_export        (end_rt),
 //   .end_rtstat_export    (end_rtstat)
 
-	 .raytest_export(raytest_vec),
+	 .raytest_export(raytest_wire),
 	 .raytest_en_export(raytest_en)
 );
 

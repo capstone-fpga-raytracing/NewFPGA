@@ -30,11 +30,11 @@ module cache_ro #(
         write = 1'b0;
         read = 1'b0;
         exist = 1'b0;
-        if (tag [i_addr[BIT_INDEX-1:0]] == i_addr[BIT_TOTAL-1:BIT_INDEX] 
-            && valid [i_addr[BIT_INDEX-1:0]]) begin
-            //exist = 1'b1;
-			exist = 1'b0; // TEMP: bypass cache in batch mode
-        end
+        //if (tag [i_addr[BIT_INDEX-1:0]] == i_addr[BIT_TOTAL-1:BIT_INDEX] 
+        //    && valid [i_addr[BIT_INDEX-1:0]]) begin
+        //    //exist = 1'b1;
+			//	exist = 1'b0;
+        //end
         if (i_en) begin
             if (i_wrt) begin: parse_write
                 if (~exist) begin
@@ -58,15 +58,16 @@ module cache_ro #(
                 valid[i] <= 1'b0;
             end
         end else if (write) begin: do_write
-            data [i_addr[BIT_INDEX-1:0]] <= i_data;
-            tag [i_addr[BIT_INDEX-1:0]] <= i_addr[BIT_TOTAL-1:BIT_INDEX];
-            valid [i_addr[BIT_INDEX-1:0]] <= 1'b1;
+            //data [i_addr[BIT_INDEX-1:0]] <= i_data;
+            //tag [i_addr[BIT_INDEX-1:0]] <= i_addr[BIT_TOTAL-1:BIT_INDEX];
+            //valid [i_addr[BIT_INDEX-1:0]] <= 1'b1;
             o_data <= i_data; // reflect on write
             o_success <= 1'b1;
         end else if (read) begin: do_read
-            valid [i_addr[BIT_INDEX-1:0]] <= 1'b1;
-            o_data <= data [i_addr[BIT_INDEX-1:0]];
-            o_success <= 1'b1;
+            //valid [i_addr[BIT_INDEX-1:0]] <= 1'b1;
+            //o_data <= data [i_addr[BIT_INDEX-1:0]];
+            //o_success <= 1'b1;
+				o_success <= 1'b0;
         end
     end
 

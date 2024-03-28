@@ -48,13 +48,15 @@ module fip_32_div #(
 );
     logic signed [FRA_BITS+31:0] temp_x, temp_z;
     always_comb begin
-        temp_x = i_x << FRA_BITS;
-        temp_z = temp_x / i_y;
-        o_z = temp_z[31:0];
-        if(SAT == `TRUE) begin
-            if (temp_z < `FIP_MIN) o_z = `FIP_MIN;
-            else if (temp_z > `FIP_MAX) o_z = `FIP_MAX;
-        end
+		  temp_x <= { i_x, 16'd0};
+        //temp_x <= i_x << FRA_BITS;
+        temp_z <= temp_x / i_y;       
+        //if(SAT == `TRUE) begin
+        //    if (temp_z < `FIP_MIN) o_z <= `FIP_MIN;
+        //    else if (temp_z > `FIP_MAX) o_z <= `FIP_MAX;
+			//	else o_z <= temp_z[31:0];
+        //end
+		  o_z <= temp_z[31:0];
     end
 
 endmodule: fip_32_div
