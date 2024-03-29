@@ -65,7 +65,7 @@ module intersection #(
     logic signed [31:0] rout_coef, rout_a, rout_b, rout_t;
 
     assign dbg_out = {rout_coef, rout_a, rout_b, rout_t};
-    assign dbg_out_en = valid[1];
+    assign dbg_out_en = valid[2];
 
     // stage4: resuslt
     logic signed [31:0] anb;
