@@ -19,16 +19,16 @@ module intersection #(
     output logic signed [31:0] o_t,
     output logic o_result,
     output logic o_valid,
-	 
-	 output logic [32*4-1:0] dbg_out,
-	 output logic dbg_out_en
+
+    output logic [32*4-1:0] dbg_out, // temp
+    output logic dbg_out_en // temp
 );
 
     // procedure of intersection:
     // sub -> det -> add -> div
     // {sub} -> {det} -> {add, div}
-    logic [0:1] valid; // stage valid bit
-    logic i_valid; // submodule output
+    logic [0:2] valid; // stage valid
+    logic sub_valid; // submodule valid
 
     // stage1: preprocess
     logic signed [31:0] e_t [0:2], t1 [0:2], t2 [0:2], _d [0:2];
@@ -42,40 +42,43 @@ module intersection #(
 
     // stage1 reg
     logic signed [31:0] rout_e_t [0:2], rout_t1 [0:2], rout_t2 [0:2], rout__d [0:2];
-	 
-	 
 
     // stage2 (multi): det
     logic signed [31:0] coef, det_a, det_b, det_t;
     logic [0:2] drop; // all 4 det modules are working parallelly, so keep only one o_valid
     fip_32_3b3_det det_c_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
-                               .i_array('{rout_t1, rout_t2, rout__d}), .o_det(coef), .o_valid(i_valid));
+                               .i_array('{rout_t1, rout_t2, rout__d}), .o_det(coef), .o_valid(sub_valid));
     fip_32_3b3_det det_a_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
                                .i_array('{rout_e_t, rout_t2, rout__d}), .o_det(det_a), .o_valid(drop[0]));
     fip_32_3b3_det det_b_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
                                .i_array('{rout_t1, rout_e_t, rout__d}), .o_det(det_b), .o_valid(drop[1]));
     fip_32_3b3_det det_t_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
                                .i_array('{rout_t1, rout_t2, rout_e_t}), .o_det(det_t), .o_valid(drop[2]));
-										 
-	 assign dbg_out = { 32'd0, 32'd0, o_t, {31'd0, o_result}};
-	 assign dbg_out_en = valid[1];								 
 
-    // stage3: result
+    // stage3: a, b, t
     logic signed [31:0] a, b, t;
     fip_32_div #(.SAT(1)) div_a_inst (.i_x(det_a), .i_y(coef), .o_z(a));
     fip_32_div #(.SAT(1)) div_b_inst (.i_x(det_b), .i_y(coef), .o_z(b));
     fip_32_div #(.SAT(1)) div_t_inst (.i_x(det_t), .i_y(coef), .o_z(t));
+
+    // stage3 reg
+    logic signed [31:0] rout_coef, rout_a, rout_b, rout_t;
+
+    assign dbg_out = {rout_coef, rout_a, rout_b, rout_t};
+    assign dbg_out_en = valid[1];
+
+    // stage4: resuslt
     logic signed [31:0] anb;
-    fip_32_add_sat add_sat_inst (.i_x(a), .i_y(b), .o_z(anb));
+    fip_32_add_sat add_sat_inst (.i_x(rout_a), .i_y(rout_b), .o_z(anb));
     logic result;
     always_comb begin
-        if (coef != 32'd0 && a[31] == 1'b0 && b[31] == 1'b0 && ~(anb > `FIP_ONE) && t[31] == 1'b0) 
-				result <= 1'b1;
+        if (rout_coef != 32'd0 && rout_a[31] == 1'b0 && rout_b[31] == 1'b0 && ~(anb > `FIP_ONE) && rout_t[31] == 1'b0)
+            result <= 1'b1;
         else result <= 1'b0;
     end
 
-    // stage3 reg
-    logic signed [31:0] rout_t;
+    // stage4 reg
+    logic signed [31:0] rout_2_t;
     logic rout_result;
 
     // stage control
@@ -85,28 +88,41 @@ module intersection #(
             rout_t1 <= '{3{32'b0}};
             rout_t2 <= '{3{32'b0}};
             rout__d <= '{3{32'b0}};
+
+            rout_coef <= 'b0;
+            rout_a <= 'b0;
+            rout_b <= 'b0;
             rout_t <= 'b0;
+
+            rout_2_t <= 'b0;
             rout_result <= 1'b0;
             valid <= 'b0;
         end else begin
+            valid[0] <= i_en;
+
             rout_e_t <= e_t;
             rout_t1 <= t1;
             rout_t2 <= t2;
             rout__d <= _d;
-            rout_result <= result;
+
+            rout_coef <= coef;
+            rout_a <= a;
+            rout_b <= b;
             rout_t <= t;
 
-            // valid[0] goes to i_valid in det submodules
-            valid[1] <= i_valid;
+            rout_2_t <= rout_t;
+            rout_result <= result;
+
+            // valid[0] goes to sub_valid in det submodules
+            valid[1] <= sub_valid;
+            valid[2] <= valid[1];
         end
-        if (i_en) valid[0] <= 1'b1;
-        else valid[0] <= 1'b0;
     end
 
     // output
-    assign o_t = rout_t;
+    assign o_t = rout_2_t;
     assign o_result = rout_result;
-    assign o_valid = valid[1];
+    assign o_valid = valid[2];
 
 endmodule: intersection
 
@@ -295,9 +311,9 @@ module tri_insector(
     input                avm_m0_readdatavalid,
     output logic [1:0]   avm_m0_byteenable,
     input                avm_m0_waitrequest,
-	 
-	 output logic [32*4-1:0] dbg_out,
-	 output logic dbg_out_en
+
+    output logic [32*4-1:0] dbg_out, // temp
+    output logic dbg_out_en // temp
 );
 
     logic reader_en, reader_ready, reader_valid;
@@ -323,9 +339,6 @@ module tri_insector(
         .avm_m0_byteenable(avm_m0_byteenable),
         .avm_m0_waitrequest(avm_m0_waitrequest)
     );
-	 
-	 //assign dbg_out = reader_data;
-	 //assign dbg_out_en = reader_valid;
 
     logic signed [31:0] reader_tri [0:2][0:2];
     genvar i, j;
@@ -360,8 +373,9 @@ module tri_insector(
         .o_t(t),
         .o_result(hit),
         .o_valid(inter_valid),
-		  .dbg_out(dbg_out),
-		  .dbg_out_en(dbg_out_en)
+
+        .dbg_out(dbg_out), // temp
+        .dbg_out_en(dbg_out_en) // temp
     );
 
     logic [31:0] reg_tri_cnt_out, reg_tri_idx_min;
