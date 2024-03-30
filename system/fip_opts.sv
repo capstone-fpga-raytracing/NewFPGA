@@ -115,6 +115,7 @@ module divider #(
             negative_output <= 1'b0;
             valid_f <= 1'b0;
             o_z <= 'b0;
+            o_valid <= 1'b0;
         end else begin
             valid_f <= i_en;
             o_valid <= valid[WIDTH-1];
@@ -149,7 +150,7 @@ module fip_32_div #(
     output logic o_valid
 );
     localparam EXT_BITS = 32 + FRA_BITS;
-    logic [EXT_BITS-1:0] temp_z;
+    logic signed [EXT_BITS-1:0] temp_z;
 
     divider #(
         .WIDTH(EXT_BITS)
@@ -158,13 +159,13 @@ module fip_32_div #(
         .i_rst(i_rst),
         .i_en(i_en),
         .i_x({i_x, FRA_BITS'('d0)}),
-        .i_y({FRA_BITS'('d0), i_y}),
+        .i_y({{FRA_BITS{i_y[31]}}, i_y}),
         .o_z(temp_z),
         .o_valid(o_valid)
     );
 
-    assign o_z = temp_z[31:0];
-    /*
+    //assign o_z = temp_z[31:0];
+    
     always_comb begin
         o_z = temp_z[31:0];
         if(SAT == `TRUE) begin
@@ -172,7 +173,7 @@ module fip_32_div #(
             else if (temp_z > `FIP_MAX) o_z <= `FIP_MAX;
         end
     end
-    */
+    
 
 endmodule: fip_32_div
 
