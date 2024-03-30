@@ -45,6 +45,7 @@ add_fileset_file cache.sv SYSTEM_VERILOG PATH cache.sv
 add_fileset_file fip_opts.sv SYSTEM_VERILOG PATH fip_opts.sv
 add_fileset_file intersection.sv SYSTEM_VERILOG PATH intersection.sv
 add_fileset_file reader.sv SYSTEM_VERILOG PATH reader.sv
+add_fileset_file divider.sv SYSTEM_VERILOG PATH divider.sv
 
 
 # 

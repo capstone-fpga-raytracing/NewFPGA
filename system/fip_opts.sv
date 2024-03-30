@@ -66,6 +66,33 @@ module fip_32_div #(
     lpm_div_attempt div_inst (.clock(clk), .denom(i_y), .numer(i_x), .quotient(o_z), .remain(32'b0));
 
 
+//     input i_clk,
+// 	 input i_rst,
+// 	 input i_en,
+//     input signed [31:0] i_x,
+//     input signed [31:0] i_y,
+//     output logic signed [31:0] o_z,
+// 	 output logic o_valid
+// );	
+// 	logic [47:0] temp_z;
+// 	assign o_z = temp_z[31:0];
+ 
+//    divider #(.WIDTH(48))
+// 	pipediv(
+//       .i_clk(i_clk),
+// 		.i_rst(i_rst),
+// 		.i_en(i_en),
+// 		.i_x({ i_x, 16'd0 }),
+// 		.i_y({ 16'd0, i_y }),
+// 		.o_z(temp_z),
+// 		.o_valid(o_valid)
+//    );
+	
+	//if(SAT == `TRUE) begin
+   //    if (temp_z < `FIP_MIN) o_z <= `FIP_MIN;
+   //    else if (temp_z > `FIP_MAX) o_z <= `FIP_MAX;
+    // else o_z <= temp_z[31:0];
+   //end
 
 endmodule: fip_32_div
 

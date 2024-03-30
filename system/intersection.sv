@@ -62,12 +62,16 @@ module intersection #(
     assign numer = SW[7:4];
     assign denom = SW[3:0];
     logic signed [31:0] a, b, t;
-    fip_32_div #(.SAT(1)) div_a_inst (.clk(i_clk), .i_x(numer), .i_y(denom), .o_z(a));
-    fip_32_div #(.SAT(1)) div_b_inst (.clk(i_clk), .i_x(det_b), .i_y(coef), .o_z(b));
-    fip_32_div #(.SAT(1)) div_t_inst (.clk(i_clk), .i_x(det_t), .i_y(coef), .o_z(t));
+    // fip_32_div #(.SAT(1)) div_a_inst (.clk(i_clk), .i_x(numer), .i_y(denom), .o_z(a));
+    // fip_32_div #(.SAT(1)) div_b_inst (.clk(i_clk), .i_x(det_b), .i_y(coef), .o_z(b));
+    // fip_32_div #(.SAT(1)) div_t_inst (.clk(i_clk), .i_x(det_t), .i_y(coef), .o_z(t));
+	 logic [0:1] drop_div;
+    fip_32_div #(.SAT(1)) div_a_inst (.i_clk(i_clk),.i_rst(~i_rstn),.i_en(sub_valid),.i_x(det_a), .i_y(coef),.o_z(a),.o_valid(valid[1]));
+    fip_32_div #(.SAT(1)) div_b_inst (.i_clk(i_clk),.i_rst(~i_rstn),.i_en(sub_valid),.i_x(det_b), .i_y(coef),.o_z(b),.o_valid(drop_div[0]));
+    fip_32_div #(.SAT(1)) div_t_inst (.i_clk(i_clk),.i_rst(~i_rstn),.i_en(sub_valid),.i_x(det_t), .i_y(coef),.o_z(t),.o_valid(drop_div[1]));
 
     // stage3 reg
-    logic signed [31:0] rout_coef, rout_a, rout_b, rout_t;
+    logic signed [31:0] rout_coef;
 
     
 
@@ -105,13 +109,15 @@ module intersection #(
     //         endcase
     //     end
     // end
+    assign dbg_out = {rout_coef, a, b, t};
+    assign dbg_out_en = valid[1];
 
     // stage4: resuslt
     logic signed [31:0] anb;
-    fip_32_add_sat add_sat_inst (.i_x(rout_a), .i_y(rout_b), .o_z(anb));
+    fip_32_add_sat add_sat_inst (.i_x(a), .i_y(b), .o_z(anb));
     logic result;
     always_comb begin
-        if (rout_coef != 32'd0 && rout_a[31] == 1'b0 && rout_b[31] == 1'b0 && ~(anb > `FIP_ONE) && rout_t[31] == 1'b0)
+        if (rout_coef != 32'd0 && a[31] == 1'b0 && b[31] == 1'b0 && ~(anb > `FIP_ONE) && t[31] == 1'b0)
             result <= 1'b1;
         else result <= 1'b0;
     end
@@ -129,13 +135,11 @@ module intersection #(
             rout__d <= '{3{32'b0}};
 
             rout_coef <= 'b0;
-            rout_a <= 'b0;
-            rout_b <= 'b0;
-            rout_t <= 'b0;
-
+				
             rout_2_t <= 'b0;
             rout_result <= 1'b0;
-            valid <= 'b0;
+            valid[0] <= 'b0;
+				valid[2] <= 'b0;
         end else begin
             valid[0] <= i_en;
 
@@ -145,15 +149,12 @@ module intersection #(
             rout__d <= _d;
 
             rout_coef <= coef;
-            rout_a <= a;
-            rout_b <= b;
-            rout_t <= t;
 
-            rout_2_t <= rout_t;
+            rout_2_t <= t;
             rout_result <= result;
 
             // valid[0] goes to sub_valid in det submodules
-            valid[1] <= sub_valid;
+            //valid[1] <= sub_valid;
             valid[2] <= valid[1];
         end
     end
