@@ -36,28 +36,36 @@ module fip_32_mult #(
 
 endmodule: fip_32_mult
 
-
 // overflow & underflow ignored if !SAT, else cut
 module fip_32_div #(
     parameter SAT = `FALSE,
     parameter FRA_BITS = 16
 )(
+    input clk,
     input signed [31:0] i_x,
     input signed [31:0] i_y,
+
+    
     output logic signed [31:0] o_z
 );
-    logic signed [FRA_BITS+31:0] temp_x, temp_z;
-    always_comb begin
-		  temp_x = { i_x, 16'd0};
-        //temp_x <= i_x << FRA_BITS;
-        temp_z = temp_x / i_y;       
-        //if(SAT == `TRUE) begin
-        //    if (temp_z < `FIP_MIN) o_z <= `FIP_MIN;
-        //    else if (temp_z > `FIP_MAX) o_z <= `FIP_MAX;
-			//	else o_z <= temp_z[31:0];
-        //end
-		  o_z = temp_z[31:0];
-    end
+//    logic signed [FRA_BITS+31:0] temp_x, temp_z;
+//    always_comb begin
+//		  temp_x = { i_x, 16'd0};
+//        //temp_x <= i_x << FRA_BITS;
+//        temp_z = temp_x / i_y;       
+//        //if(SAT == `TRUE) begin
+//        //    if (temp_z < `FIP_MIN) o_z <= `FIP_MIN;
+//        //    else if (temp_z > `FIP_MAX) o_z <= `FIP_MAX;
+//			//	else o_z <= temp_z[31:0];
+//        //end
+//			o_z = temp_z[31:0];
+    // end
+
+    
+    // Insantiate lpm div
+    lpm_div_attempt div_inst (.clock(clk), .denom(i_y), .numer(i_x), .quotient(o_z), .remain(32'b0));
+
+
 
 endmodule: fip_32_div
 
@@ -234,8 +242,8 @@ module fip_32_vector_normal(
     fip_32_sqrt sqrt_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en), .i_rad(sum2),
                            .o_root(sqrt_sum2), .o_busy(drop[0]), .o_valid(drop[1]));
 
-    fip_32_div div_1_inst (.i_x(i_vector[0]), .i_y(sqrt_sum2), .o_z(o_vector[0]));
-    fip_32_div div_2_inst (.i_x(i_vector[1]), .i_y(sqrt_sum2), .o_z(o_vector[1]));
-    fip_32_div div_3_inst (.i_x(i_vector[2]), .i_y(sqrt_sum2), .o_z(o_vector[2]));
+    fip_32_div div_1_inst (.clk(i_clk), .i_x(i_vector[0]), .i_y(sqrt_sum2), .o_z(o_vector[0]));
+    fip_32_div div_2_inst (.clk(i_clk), .i_x(i_vector[1]), .i_y(sqrt_sum2), .o_z(o_vector[1]));
+    fip_32_div div_3_inst (.clk(i_clk), .i_x(i_vector[2]), .i_y(sqrt_sum2), .o_z(o_vector[2]));
 
 endmodule: fip_32_vector_normal

@@ -42,6 +42,8 @@ module DE1_SoC_Computer (
 
    // LEDs
    LEDR,
+	
+	SW,
 
 
    ////////////////////////////////////
@@ -158,6 +160,8 @@ output               DRAM_RAS_N;
 output               DRAM_UDQM;
 output               DRAM_WE_N;
 
+// Slider Switches
+input			[ 9: 0]	SW;
 
 // 40-pin headers
 inout       [35: 0]  GPIO_0;
@@ -683,7 +687,7 @@ Computer_System The_System (
    .hps_io_hps_io_spim1_inst_MOSI   (HPS_SPIM_MOSI),
    .hps_io_hps_io_spim1_inst_MISO   (HPS_SPIM_MISO),
    .hps_io_hps_io_spim1_inst_SS0    (HPS_SPIM_SS),
-
+	
    // UART
    .hps_io_hps_io_uart0_inst_RX  (HPS_UART_RX),
    .hps_io_hps_io_uart0_inst_TX  (HPS_UART_TX),
@@ -719,7 +723,8 @@ Computer_System The_System (
 //   .end_rtstat_export    (end_rtstat)
 
 	 .raytest_export(raytest_wire),
-	 .raytest_en_export(raytest_en)
+	 .raytest_en_export(raytest_en),
+	 .raytest_sw_export(SW)
 );
 
 

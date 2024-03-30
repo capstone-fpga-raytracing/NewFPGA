@@ -21,7 +21,8 @@ module intersection #(
     output logic o_valid,
 
     output logic [32*4-1:0] dbg_out, // temp
-    output logic dbg_out_en // temp
+    output logic dbg_out_en, // temp
+    input logic [9:0] SW
 );
 
     // procedure of intersection:
@@ -54,18 +55,56 @@ module intersection #(
                                .i_array('{rout_t1, rout_e_t, rout__d}), .o_det(det_b), .o_valid(drop[1]));
     fip_32_3b3_det det_t_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
                                .i_array('{rout_t1, rout_t2, rout_e_t}), .o_det(det_t), .o_valid(drop[2]));
-
+    assign dbg_out = {coef, det_a, det_b, det_t};
+    assign dbg_out_en = sub_valid;
     // stage3: a, b, t
+    logic [3:0] denom, numer;
+    assign numer = SW[7:4];
+    assign denom = SW[3:0];
     logic signed [31:0] a, b, t;
-    fip_32_div #(.SAT(1)) div_a_inst (.i_x(det_a), .i_y(coef), .o_z(a));
-    fip_32_div #(.SAT(1)) div_b_inst (.i_x(det_b), .i_y(coef), .o_z(b));
-    fip_32_div #(.SAT(1)) div_t_inst (.i_x(det_t), .i_y(coef), .o_z(t));
+    fip_32_div #(.SAT(1)) div_a_inst (.clk(i_clk), .i_x(numer), .i_y(denom), .o_z(a));
+    fip_32_div #(.SAT(1)) div_b_inst (.clk(i_clk), .i_x(det_b), .i_y(coef), .o_z(b));
+    fip_32_div #(.SAT(1)) div_t_inst (.clk(i_clk), .i_x(det_t), .i_y(coef), .o_z(t));
 
     // stage3 reg
     logic signed [31:0] rout_coef, rout_a, rout_b, rout_t;
 
-    assign dbg_out = {rout_coef, rout_a, rout_b, rout_t};
-    assign dbg_out_en = valid[1];
+    
+
+    typedef enum logic [1:0] {IDLE, COUNTING, COUNT_END} state_t;
+    state_t state;
+
+    // Define the counter
+    logic [4:0] counter; // 5 bits are enough to count to 20
+
+    // always_ff @(posedge i_clk or negedge i_rstn) begin
+    //     if (~i_rstn) begin
+    //         state <= IDLE;
+    //         counter <= 5'b0;
+    //         dbg_out_en <= 1'b0;
+    //     end else begin
+    //         case (state)
+    //             IDLE: begin
+    //                 if (valid[1]) begin
+    //                     state <= COUNTING;
+    //                     counter <= 5'b0;
+    //                 end
+    //             end
+    //             COUNTING: begin
+    //                 if (counter == 5'd19) begin // 20 cycles have passed
+    //                     state <= COUNT_END;
+    //                     dbg_out_en <= 1'b1;
+    //                 end else begin
+    //                     counter <= counter + 5'b1;
+    //                 end
+    //             end
+    //             COUNT_END: begin
+    //                 dbg_out_en <= 1'b0;
+    //                 state <= IDLE;
+    //             end
+    //         endcase
+    //     end
+    // end
 
     // stage4: resuslt
     logic signed [31:0] anb;
@@ -313,7 +352,8 @@ module tri_insector(
     input                avm_m0_waitrequest,
 
     output logic [32*4-1:0] dbg_out, // temp
-    output logic dbg_out_en // temp
+    output logic dbg_out_en, // temp
+    input logic [9:0] SW
 );
 
     logic reader_en, reader_ready, reader_valid;
@@ -375,7 +415,8 @@ module tri_insector(
         .o_valid(inter_valid),
 
         .dbg_out(dbg_out), // temp
-        .dbg_out_en(dbg_out_en) // temp
+        .dbg_out_en(dbg_out_en), // temp
+        .SW(SW)
     );
 
     logic [31:0] reg_tri_cnt_out, reg_tri_idx_min;

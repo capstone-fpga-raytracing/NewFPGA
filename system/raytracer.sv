@@ -3,6 +3,7 @@ module ray_tracer
    input logic clk,
    input logic reset,
    input logic start_rt,
+   input logic [9:0] SW,
    output logic end_rt,
    output logic [7:0] end_rtstat,
    
@@ -17,7 +18,7 @@ module ray_tracer
    output logic [15:0] avm_m0_writedata,
 	
    output logic [32*4-1:0] raytest,
-	output logic raytest_en
+    output logic raytest_en
 );
 
 // State table
@@ -291,7 +292,8 @@ tri_insector tri_insector_inst
     .avm_m0_waitrequest(avm_m0_waitrequest),
 	 
 	 .dbg_out(raytest),
-	 .dbg_out_en(raytest_en)
+	 .dbg_out_en(raytest_en),
+     .SW(SW)
 );
 
 
