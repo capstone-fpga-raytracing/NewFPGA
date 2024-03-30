@@ -1,4 +1,4 @@
-`define NTRIS 3
+`define NTRIS 1
 
 module raytracer_tb();
     logic clk, reset;

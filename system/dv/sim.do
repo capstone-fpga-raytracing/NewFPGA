@@ -15,6 +15,7 @@ vlog ../intersection.sv
 vlog ../raytracer.sv
 vlog ../shading.sv
 
+vlog ../divider.sv
 
 
 # compile testbench
@@ -27,6 +28,8 @@ vlog reader_tb.sv
 vlog intersection_tb.sv
 vlog raytracer_tb.sv
 # vlog shading_tb.sv
+
+vlog divider_tb.sv
 
 
 
@@ -47,9 +50,11 @@ vlog raytracer_tb.sv
 # vsim reader_tb
 # vsim intersection_tb
 # vsim tri_insector_tb
-vsim raytracer_tb
+# vsim raytracer_tb
 # vsim bp_shading_tb
 # vsim bp_shading_light_tb
+
+vsim divider_tb
 
 
 
