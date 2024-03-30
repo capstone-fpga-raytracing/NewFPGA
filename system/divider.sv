@@ -1,5 +1,5 @@
 module sub_divider #(
-    parameter WIDTH = 32
+    parameter WIDTH = 48
 )(
     input i_clk,
     input i_rst,
@@ -16,21 +16,29 @@ module sub_divider #(
     logic [WIDTH*2-1:0] diff;
     assign diff = i_dividend_copy - i_divider_copy;
 
-    always_ff @(posedge i_clk) begin
+    always_ff @(posedge i_clk) 
+	 begin
         if (i_rst) begin
             o_quotient_temp <= 'b0;
             o_dividend_copy <= 'b0;
             o_divider_copy <= 'b0;
             o_valid <= 1'b0;
         end else begin
-            o_quotient_temp <= i_quotient_temp << 1;
-            if( !diff[WIDTH*2-1] ) begin
-                o_dividend_copy <= diff;
-                o_quotient_temp[0] <= 1'd1;
-            end else begin
-                o_dividend_copy <= i_dividend_copy;
-            end
-            o_divider_copy <= i_divider_copy >> 1;
+            //if (i_en) begin
+					 o_quotient_temp <= (i_quotient_temp << 1);
+                if(!diff[WIDTH*2-1]) begin
+                    o_dividend_copy <= diff;
+                    //o_quotient_temp <= {i_quotient_temp[WIDTH-2:0], 1'b1};
+						  // o_quotient_temp <= WIDTH'('b1);
+						  o_quotient_temp[0] <= 1'b1;
+                end else begin
+                    o_quotient_temp <= {i_quotient_temp[WIDTH-2:0], 1'b0};
+                    o_dividend_copy <= i_dividend_copy;
+                end
+                //o_divider_copy <= i_divider_copy >> 1;
+					 o_divider_copy <= {1'b0, i_divider_copy[WIDTH-1:1]};
+            //end
+            
             o_valid <= i_en;
         end
     end
@@ -39,7 +47,7 @@ endmodule: sub_divider
 
 
 module divider #(
-    parameter WIDTH = 32
+    parameter WIDTH = 48
 )(
     input i_clk,
     input i_rst,
@@ -58,11 +66,11 @@ module divider #(
 
     logic [WIDTH*2-1:0] dividend_copy_f, divider_copy_f;
 
-    sub_divider #(.WIDTH(WIDTH)) inst_first (i_clk, i_rst, valid_f, 'b0, dividend_copy_f, divider_copy_f,
+    sub_divider #(.WIDTH(WIDTH)) inst_first (i_clk, i_rst, valid_f, WIDTH'('b0), dividend_copy_f, divider_copy_f,
                                              quotient_temp[0], dividend_copy[0], divider_copy[0], valid[0]);
     genvar i;
     generate begin: sub_dividers
-        for (i = 1; i < WIDTH; i+=1) begin
+        for (i = 1; i < WIDTH; i+=1) begin: sub_divide
             sub_divider #(.WIDTH(WIDTH)) inst (i_clk, i_rst, valid[i-1], quotient_temp[i-1], dividend_copy[i-1], divider_copy[i-1],
                                                quotient_temp[i], dividend_copy[i], divider_copy[i], valid[i]);
         end
@@ -75,20 +83,22 @@ module divider #(
             divider_copy_f <= 'b0;
             negative_output <= 1'b0;
             valid_f <= 1'b0;
-        end else begin
+				o_z <= WIDTH'('b0);
+        end else 
+		  begin
+				valid_f <= i_en;
             if (i_en) begin
                 dividend_copy_f <= (!i_x[WIDTH-1]) ? {WIDTH'('b0),i_x} : {WIDTH'('b0),~i_x + 1'b1};
                 divider_copy_f <= (!i_y[WIDTH-1]) ? {1'b0,i_y,(WIDTH-1)'('b0)} : {1'b0,~i_y + 1'b1,(WIDTH-1)'('b0)};
                 negative_output <= ((i_y[WIDTH-1] && !i_x[WIDTH-1]) || (!i_y[WIDTH-1] && i_x[WIDTH-1]));
-            end
-            valid_f <= i_en;
+				end
+            else if (valid[WIDTH-1]) 
+				begin
+					 o_z <= (!negative_output) ? quotient_temp[WIDTH-1] : ~quotient_temp[WIDTH-1] + 1'b1;
+					 o_valid <= 1'b1;
+				end
         end
     end
-
-    assign o_z = (!negative_output) ?
-				  quotient_temp[WIDTH-1] :
-				  ~quotient_temp[WIDTH-1] + 1'b1;
-    assign o_valid = valid[WIDTH-1];
 
 endmodule: divider
 
@@ -106,35 +116,35 @@ initial negative_output = 0;
 
 always @( posedge clk ) 
 begin
-	del_ready <= !bitv;
-	if( start ) 
-	begin
-		bitv = WIDTH;
-		quotient = 0;
-		quotient_temp = 0;
-		dividend_copy = (!dividend[WIDTH-1]) ?
-				{1'b0,zeros,dividend} :
-				{1'b0,zeros,~dividend + 1'b1};			
-		divider_copy = (!divider[WIDTH-1]) ?
-				{1'b0,divider,zeros} :
-				{1'b0,~divider + 1'b1,zeros};
-		negative_output = 
-			((divider[WIDTH-1] && !dividend[WIDTH-1])
-			||(!divider[WIDTH-1] && dividend[WIDTH-1]));
-	end
-	else if ( bitv > 0 ) begin
-		diff = dividend_copy - divider_copy;
-		quotient_temp = quotient_temp << 1;
-		if( !diff[WIDTH*2-1] ) begin
-			dividend_copy = diff;
-			quotient_temp[0] = 1'd1;
-		end
-		quotient = (!negative_output) ?
-				quotient_temp :
-				~quotient_temp + 1'b1;
-		divider_copy = divider_copy >> 1;
-		bitv = bitv - 1'b1;
-	end
+   del_ready <= !bitv;
+   if( start ) 
+   begin
+      bitv = WIDTH;
+      quotient = 0;
+      quotient_temp = 0;
+      dividend_copy = (!dividend[WIDTH-1]) ?
+            {1'b0,zeros,dividend} :
+            {1'b0,zeros,~dividend + 1'b1};         
+      divider_copy = (!divider[WIDTH-1]) ?
+            {1'b0,divider,zeros} :
+            {1'b0,~divider + 1'b1,zeros};
+      negative_output = 
+         ((divider[WIDTH-1] && !dividend[WIDTH-1])
+         ||(!divider[WIDTH-1] && dividend[WIDTH-1]));
+   end
+   else if ( bitv > 0 ) begin
+      diff = dividend_copy - divider_copy;
+      quotient_temp = quotient_temp << 1;
+      if( !diff[WIDTH*2-1] ) begin
+         dividend_copy = diff;
+         quotient_temp[0] = 1'd1;
+      end
+      quotient = (!negative_output) ?
+            quotient_temp :
+            ~quotient_temp + 1'b1;
+      divider_copy = divider_copy >> 1;
+      bitv = bitv - 1'b1;
+   end
 end
 endmodule
 */

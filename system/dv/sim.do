@@ -7,6 +7,7 @@ vlib work
 # === CHANGE HERE ===
 # vlog ../*.sv
 
+vlog ../divider.sv
 vlog ../fip_opts.sv
 vlog ../cache.sv
 vlog ../avalon_sdr.sv
@@ -15,7 +16,6 @@ vlog ../intersection.sv
 vlog ../raytracer.sv
 vlog ../shading.sv
 
-vlog ../divider.sv
 
 
 # compile testbench
@@ -50,11 +50,10 @@ vlog divider_tb.sv
 # vsim reader_tb
 # vsim intersection_tb
 # vsim tri_insector_tb
-# vsim raytracer_tb
+vsim raytracer_tb
 # vsim bp_shading_tb
 # vsim bp_shading_light_tb
-
-vsim divider_tb
+#vsim divider_tb
 
 
 
