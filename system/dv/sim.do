@@ -7,7 +7,6 @@ vlib work
 # === CHANGE HERE ===
 # vlog ../*.sv
 
-vlog ../divider.sv
 vlog ../fip_opts.sv
 vlog ../cache.sv
 vlog ../avalon_sdr.sv
@@ -29,8 +28,6 @@ vlog intersection_tb.sv
 vlog raytracer_tb.sv
 # vlog shading_tb.sv
 
-vlog divider_tb.sv
-
 
 
 # load top level simulation module
@@ -38,6 +35,7 @@ vlog divider_tb.sv
 
 # vsim fip_32_add_sat_tb
 # vsim fip_32_mult_tb
+# vsim divider_tb
 # vsim fip_32_div_tb
 # vsim fip_32_vector_cross_tb
 # vsim fip_32_vector_dot_tb
@@ -48,12 +46,11 @@ vlog divider_tb.sv
 # vsim cache_ro_tb
 # vsim cache_ro_multi_tb
 # vsim reader_tb
-# vsim intersection_tb
+vsim intersection_tb
 # vsim tri_insector_tb
-vsim raytracer_tb
+# vsim raytracer_tb
 # vsim bp_shading_tb
 # vsim bp_shading_light_tb
-#vsim divider_tb
 
 
 

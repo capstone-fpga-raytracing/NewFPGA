@@ -104,7 +104,7 @@ module intersection_tb();
         test();
         // expects result = 1, t = 65536 (1)
 
-        repeat(12) @(posedge clk);
+        repeat(100) @(posedge clk);
         $display("[%0d]intersection: test end\n", $time());
         $stop();
     end

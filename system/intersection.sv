@@ -4,6 +4,8 @@
 `define FIP_MIN 32'sh80000000
 `define FIP_MAX 32'sh7fffffff
 
+`define DIV_CYCLE 50
+
 typedef logic signed [31:0] fip;
 
 
@@ -27,8 +29,8 @@ module intersection #(
     // procedure of intersection:
     // sub -> det -> add -> div
     // {sub} -> {det} -> {add, div}
-    logic [0:2] valid; // stage valid
-    logic sub_valid; // submodule valid
+    logic [0:1] valid; // stage valid
+    logic [0:1] sub_valid; // submodule valid
 
     // stage1: preprocess
     logic signed [31:0] e_t [0:2], t1 [0:2], t2 [0:2], _d [0:2];
@@ -45,41 +47,45 @@ module intersection #(
 
     // stage2 (multi): det
     logic signed [31:0] coef, det_a, det_b, det_t;
-    logic [0:2] drop; // all 4 det modules are working parallelly, so keep only one o_valid
+    logic [0:2] det_drop; // all 4 det modules are working parallelly, so keep only one o_valid
     fip_32_3b3_det det_c_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
-                               .i_array('{rout_t1, rout_t2, rout__d}), .o_det(coef), .o_valid(sub_valid));
+                               .i_array('{rout_t1, rout_t2, rout__d}), .o_det(coef), .o_valid(sub_valid[0]));
     fip_32_3b3_det det_a_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
-                               .i_array('{rout_e_t, rout_t2, rout__d}), .o_det(det_a), .o_valid(drop[0]));
+                               .i_array('{rout_e_t, rout_t2, rout__d}), .o_det(det_a), .o_valid(det_drop[0]));
     fip_32_3b3_det det_b_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
-                               .i_array('{rout_t1, rout_e_t, rout__d}), .o_det(det_b), .o_valid(drop[1]));
+                               .i_array('{rout_t1, rout_e_t, rout__d}), .o_det(det_b), .o_valid(det_drop[1]));
     fip_32_3b3_det det_t_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(valid[0]),
-                               .i_array('{rout_t1, rout_t2, rout_e_t}), .o_det(det_t), .o_valid(drop[2]));
+                               .i_array('{rout_t1, rout_t2, rout_e_t}), .o_det(det_t), .o_valid(det_drop[2]));
 
     // stage3: a, b, t
     logic signed [31:0] a, b, t;
-	 logic [0:1] drop_div;
-    fip_32_div #(.SAT(1)) div_a_inst (.i_clk(i_clk),.i_rst(~i_rstn),.i_en(sub_valid),.i_x(det_a), .i_y(coef),.o_z(a),.o_valid(valid[1]));
-    fip_32_div #(.SAT(1)) div_b_inst (.i_clk(i_clk),.i_rst(~i_rstn),.i_en(sub_valid),.i_x(det_b), .i_y(coef),.o_z(b),.o_valid(drop_div[0]));
-    fip_32_div #(.SAT(1)) div_t_inst (.i_clk(i_clk),.i_rst(~i_rstn),.i_en(sub_valid),.i_x(det_t), .i_y(coef),.o_z(t),.o_valid(drop_div[1]));
+    logic [0:1] div_drop;
+    fip_32_div #(.SAT(1)) div_a_inst (.i_clk(i_clk), .i_rst(~i_rstn), .i_en(sub_valid[0]),
+                                      .i_x(det_a), .i_y(coef), .o_z(a), .o_valid(sub_valid[1]));
+    fip_32_div #(.SAT(1)) div_b_inst (.i_clk(i_clk), .i_rst(~i_rstn), .i_en(sub_valid[0]),
+                                      .i_x(det_b), .i_y(coef), .o_z(b), .o_valid(div_drop[0]));
+    fip_32_div #(.SAT(1)) div_t_inst (.i_clk(i_clk), .i_rst(~i_rstn), .i_en(sub_valid[0]),
+                                      .i_x(det_t), .i_y(coef), .o_z(t), .o_valid(div_drop[1]));
 
     // stage3 reg
-    logic signed [31:0] rout_coef;
+    logic signed [31:0] rout_coef [0:`DIV_CYCLE-1];
 
-    assign dbg_out = {rout_coef, a, b, t};
-    assign dbg_out_en = valid[1];
+    assign dbg_out = {rout_coef[`DIV_CYCLE-1], a, b, t};
+    assign dbg_out_en = sub_valid[1];
 
     // stage4: resuslt
     logic signed [31:0] anb;
     fip_32_add_sat add_sat_inst (.i_x(a), .i_y(b), .o_z(anb));
     logic result;
     always_comb begin
-        if (rout_coef != 32'd0 && a[31] == 1'b0 && b[31] == 1'b0 && ~(anb > `FIP_ONE) && t[31] == 1'b0)
+        if (rout_coef[`DIV_CYCLE-1] != 32'd0 && a[31] == 1'b0 && b[31] == 1'b0 &&
+            ~(anb > `FIP_ONE) && t[31] == 1'b0)
             result <= 1'b1;
         else result <= 1'b0;
     end
 
     // stage4 reg
-    logic signed [31:0] rout_2_t;
+    logic signed [31:0] rout_t;
     logic rout_result;
 
     // stage control
@@ -90,35 +96,37 @@ module intersection #(
             rout_t2 <= '{3{32'b0}};
             rout__d <= '{3{32'b0}};
 
-            rout_coef <= 'b0;
-				
-            rout_2_t <= 'b0;
+            rout_coef <= '{`DIV_CYCLE{32'b0}};
+
+            rout_t <= 'b0;
             rout_result <= 1'b0;
-            valid[0] <= 'b0;
-				valid[2] <= 'b0;
+            valid <= 'b0;
         end else begin
             valid[0] <= i_en;
+            // valid[0] goes to sub_valid[0] in det submodules
+            // sub_valid[0] goes to sub_valid[1] in div submodules
+            valid[1] <= sub_valid[1];
+            
+            rout_coef[0] <= coef;
+            for (int i = 0; i < `DIV_CYCLE-1; i += 1) begin
+                rout_coef[i+1] <= rout_coef[i];
+            end
 
             rout_e_t <= e_t;
             rout_t1 <= t1;
             rout_t2 <= t2;
             rout__d <= _d;
 
-            rout_coef <= coef;
-
-            rout_2_t <= t;
+            rout_t <= t;
             rout_result <= result;
 
-            // valid[0] goes to sub_valid in det submodules
-            //valid[1] <= sub_valid;
-            valid[2] <= valid[1];
         end
     end
 
     // output
-    assign o_t = rout_2_t;
+    assign o_t = rout_t;
     assign o_result = rout_result;
-    assign o_valid = valid[2];
+    assign o_valid = valid[1];
 
 endmodule: intersection
 
