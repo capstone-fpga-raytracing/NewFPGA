@@ -164,16 +164,13 @@ module fip_32_div #(
         .o_valid(o_valid)
     );
 
-    //assign o_z = temp_z[31:0];
-    
     always_comb begin
         o_z = temp_z[31:0];
         if(SAT == `TRUE) begin
-            if (temp_z < `FIP_MIN) o_z <= `FIP_MIN;
-            else if (temp_z > `FIP_MAX) o_z <= `FIP_MAX;
+            if (temp_z < `FIP_MIN) o_z = `FIP_MIN;
+            else if (temp_z > `FIP_MAX) o_z = `FIP_MAX;
         end
     end
-    
 
 endmodule: fip_32_div
 
@@ -346,12 +343,15 @@ module fip_32_vector_normal(
     assign sum2 = sum1 + square3;
 
     logic signed [31:0] sqrt_sum2;
-    logic [0:1] drop; // not using pipeline
-    fip_32_sqrt sqrt_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en), .i_rad(sum2),
-                           .o_root(sqrt_sum2), .o_busy(drop[0]), .o_valid(drop[1]));
+    logic [0:6] temp; // not using pipeline
+    fip_32_sqrt sqrt_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(temp[0]), .i_rad(sum2),
+                           .o_root(sqrt_sum2), .o_busy(temp[1]), .o_valid(temp[2]));
 
-    fip_32_div div_1_inst (.i_x(i_vector[0]), .i_y(sqrt_sum2), .o_z(o_vector[0]));
-    fip_32_div div_2_inst (.i_x(i_vector[1]), .i_y(sqrt_sum2), .o_z(o_vector[1]));
-    fip_32_div div_3_inst (.i_x(i_vector[2]), .i_y(sqrt_sum2), .o_z(o_vector[2]));
+    fip_32_div div_1_inst (.i_clk(i_clk), .i_rst(~i_rstn), .i_en(temp[3]),
+                           .i_x(i_vector[0]), .i_y(sqrt_sum2), .o_z(o_vector[0]), .o_valid(temp[4]));
+    fip_32_div div_2_inst (.i_clk(i_clk), .i_rst(~i_rstn), .i_en(temp[3]),
+                           .i_x(i_vector[1]), .i_y(sqrt_sum2), .o_z(o_vector[1]), .o_valid(temp[5]));
+    fip_32_div div_3_inst (.i_clk(i_clk), .i_rst(~i_rstn), .i_en(temp[3]),
+                           .i_x(i_vector[2]), .i_y(sqrt_sum2), .o_z(o_vector[2]), .o_valid(temp[6]));
 
 endmodule: fip_32_vector_normal
