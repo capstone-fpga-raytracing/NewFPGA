@@ -36,7 +36,7 @@ vlog raytracer_tb.sv
 # vsim fip_32_add_sat_tb
 # vsim fip_32_mult_tb
 # vsim divider_tb
-# vsim fip_32_div_tb
+vsim fip_32_div_tb
 # vsim fip_32_vector_cross_tb
 # vsim fip_32_vector_dot_tb
 # vsim fip_32_sqrt_tb
@@ -48,7 +48,7 @@ vlog raytracer_tb.sv
 # vsim reader_tb
 # vsim intersection_tb
 # vsim tri_insector_tb
-vsim raytracer_tb
+# vsim raytracer_tb
 # vsim bp_shading_tb
 # vsim bp_shading_light_tb
 
