@@ -7,6 +7,7 @@ vlib work
 # === CHANGE HERE ===
 # vlog ../*.sv
 
+vlog ../div4832_syn.v
 vlog ../divider.sv
 vlog ../fip_opts.sv
 vlog ../cache.sv

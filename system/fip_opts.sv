@@ -53,16 +53,31 @@ module fip_32_div #(
 	logic [47:0] temp_z;
 	assign o_z = temp_z[31:0];
  
-   divider #(.WIDTH(48))
-	pipediv(
-      .i_clk(i_clk),
-		.i_rst(i_rst),
-		.i_en(i_en),
-		.i_x({ i_x, 16'd0 }),
-		.i_y({ 16'd0, i_y }),
-		.o_z(temp_z),
-		.o_valid(o_valid)
-   );
+   //divider #(.WIDTH(48))
+	//pipediv(
+   //   .i_clk(i_clk),
+	//	.i_rst(i_rst),
+	//	.i_en(i_en),
+	//	.i_x({ i_x, 16'd0 }),
+	//	.i_y({ 16'd0, i_y }),
+	//	.o_z(temp_z),
+	//	.o_valid(o_valid)
+   //);
+	
+	div4832 div(
+		.clock(i_clk),
+		.aclr(i_rst),
+		.clken(i_en),
+		.numer({i_x, 16'd0}),
+		.denom(i_y),
+		.quotient(temp_z)
+	);
+	
+	always_ff @(posedge i_clk)
+	begin
+		o_valid <= i_en;
+	end
+	
 	
 	//if(SAT == `TRUE) begin
    //    if (temp_z < `FIP_MIN) o_z <= `FIP_MIN;

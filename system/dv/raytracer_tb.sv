@@ -1,5 +1,6 @@
-`define NTRIS 1
+`define NTRIS 3
 
+`timescale 1 ps / 1 ps
 module raytracer_tb();
     logic clk, reset;
     always #10 clk = ~clk;
