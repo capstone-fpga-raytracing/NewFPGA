@@ -70,8 +70,8 @@ module intersection #(
     // stage3 reg
     logic signed [31:0] rout_coef [0:`DIV_CYCLE-1];
 
-    assign dbg_out = {rout_coef[`DIV_CYCLE-1], a, b, t};
-    assign dbg_out_en = sub_valid[1];
+    assign dbg_out = {rout_coef[`DIV_CYCLE-1], a, b, t}; // temp
+    assign dbg_out_en = sub_valid[1]; // temp
 
     // stage4: resuslt
     logic signed [31:0] anb;
@@ -129,97 +129,6 @@ module intersection #(
     assign o_valid = valid[1];
 
 endmodule: intersection
-
-
-/* unused
-// basic intersection (without pipeline)
-module bs_intersection #(
-    parameter signed MIN_T = 0
-) (
-    input i_clk,
-    input i_rstn,
-    input i_en,
-    input signed [31:0] i_tri [0:2][0:2], // i_tri[0]: vertex 0
-    input signed [31:0] i_ray [0:1][0:2], // i_ray[0]: origin(E), i_ray[1]: direction(D)
-    output logic signed [31:0] o_t,
-    output logic o_result,
-    output logic o_valid
-);
-
-    // T1 = i_tri[1] - i_tri[0]
-    // T2 = i_tri[2] - i_tri[0]
-
-    // |T1[0], T2[0], -D[0]|   |a|
-    // |T1[1], T2[1], -D[1]| x |b| = E - i_tri[0]
-    // |T1[2], T2[2], -D[2]|   |t|
-
-    // coef = det(T1, T2, -D)
-    // a = det(E - i_tri[0], T2, -D)/coef
-    // b = det(T1, E - i_tri[0], -D)/coef
-    // t = det(T1, T2, E - i_tri[0])/coef
-
-    // check: coef != 0, a >= 0, b >= 0, a + b <= 1, t >= MIN_T
-
-    // preprocess
-    logic signed [31:0] e_t [0:2], t1 [0:2], t2 [0:2], _d [0:2];
-
-    always_comb begin
-        e_t = '{i_ray[0][0] - i_tri[0][0], i_ray[0][1] - i_tri[0][1], i_ray[0][2] - i_tri[0][2]};
-        t1 = '{i_tri[1][0] - i_tri[0][0], i_tri[1][1] - i_tri[0][1], i_tri[1][2] - i_tri[0][2]};
-        t2 = '{i_tri[2][0] - i_tri[0][0], i_tri[2][1] - i_tri[0][1], i_tri[2][2] - i_tri[0][2]};
-        _d = '{32'sb0 - i_ray[1][0], 32'sb0 - i_ray[1][1], 32'sb0 - i_ray[1][2]};
-    end
-
-    // det
-    logic signed [31:0] coef, det_a, det_b, det_t;
-    logic [0:3] drop; // not using pipeline
-    fip_32_3b3_det det_c_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
-                               .i_array('{t1, t2, _d}), .o_det(coef), .o_valid(drop[0]));
-    fip_32_3b3_det det_a_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
-                               .i_array('{e_t, t2, _d}), .o_det(det_a), .o_valid(drop[1]));
-    fip_32_3b3_det det_b_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
-                               .i_array('{t1, e_t, _d}), .o_det(det_b), .o_valid(drop[2]));
-    fip_32_3b3_det det_t_inst (.i_clk(i_clk), .i_rstn(i_rstn), .i_en(i_en),
-                               .i_array('{t1, t2, e_t}), .o_det(det_t), .o_valid(drop[3]));
-
-    logic signed [31:0] a, b, t;
-    fip_32_div #(.SAT(1)) div_a_inst (.i_x(det_a), .i_y(coef), .o_z(a));
-    fip_32_div #(.SAT(1)) div_b_inst (.i_x(det_b), .i_y(coef), .o_z(b));
-    fip_32_div #(.SAT(1)) div_t_inst (.i_x(det_t), .i_y(coef), .o_z(t));
-
-    logic signed [31:0] anb;
-    fip_32_add_sat add_sat_inst (.i_x(a), .i_y(b), .o_z(anb));
-
-    // result
-    always_comb begin
-        o_t = t;
-        if (|coef && a[31] == 1'b0 && b[31] == 1'b0 && anb <= `FIP_ONE && t >= MIN_T) o_result = 1'b1;
-        else o_result = 1'b0;
-    end
-
-endmodule: bs_intersection
-*/
-
-
-// fake intersection, for test only
-module dummy_intersection #(
-    parameter signed MIN_T = 0
-) (
-    input i_clk,
-    input i_rstn,
-    input i_en,
-    input signed [31:0] i_tri [0:2][0:2], // i_tri[0]: vertex 0
-    input signed [31:0] i_ray [0:1][0:2], // i_ray[0]: origin(E), i_ray[1]: direction(D)
-    output logic signed [31:0] o_t,
-    output logic o_result,
-    output logic o_valid
-);
-
-    assign o_t = 'h00010002;
-    assign o_result = 'b1;
-    assign o_valid = 'b1;
-
-endmodule: dummy_intersection
 
 
 /*

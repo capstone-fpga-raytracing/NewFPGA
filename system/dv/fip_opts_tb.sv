@@ -107,18 +107,18 @@ endmodule: fip_32_mult_tb
 
 module divider_tb();
     localparam WIDTH = 48;
-    logic clk, rst, en;
+    logic clk, rst, en, valid;
     logic signed [WIDTH-1:0] dividend, divider, quotient;
-    logic o_valid;
     always #10 clk = ~clk;
 
-    divider #(.WIDTH(WIDTH)) dut (clk, rst, en, dividend, divider, quotient, o_valid);
+    divider #(.WIDTH(WIDTH)) dut (clk, rst, en, dividend, divider, quotient, valid);
 
     initial begin
         clk=1;
         rst=1;
         repeat(10) @(posedge clk);
         rst=0;
+        $display("\n[%0d]divider: test begin\n", $time());
 
         dividend = 48'h300000000;
         divider = 48'h10000;
@@ -140,8 +140,8 @@ module divider_tb();
 
         // while(~ready) @(posedge clk);
         repeat(100) @(posedge clk);
+        $display("[%0d]divider: test end\n", $time());
         $stop();
-
     end
 
 endmodule: divider_tb
@@ -150,18 +150,28 @@ endmodule: divider_tb
 module fip_32_div_tb();
     localparam SAT = `TRUE; // For saturation against overflow/underflow
     localparam FRA_BITS = 16; // For Q16.16 fixed-point format
+    logic clk, rst, en, valid;
     logic signed [31:0] x, y, quotient;
+    always #10 clk = ~clk;
 
     fip_32_div #(
         .SAT(SAT),
         .FRA_BITS(FRA_BITS)
     ) dut (
+        .i_clk(clk),
+        .i_rst(rst),
+        .i_en(en),
         .i_x(x),
         .i_y(y),
-        .o_z(quotient)
+        .o_z(quotient),
+        .o_valid(valid)
     );
 
     initial begin
+        clk=1;
+        rst=1;
+        repeat(10) @(posedge clk);
+        rst=0;
         $display("\n[%0d]fip_32_div: test begin\n", $time());
 
         // no overflow or underflow
@@ -169,26 +179,34 @@ module fip_32_div_tb();
         // Test 1: Division of integer numbers without overflow
         x = 2 << FRA_BITS; // 2.0 in Q16.16 (131072)    
         y = 2 << FRA_BITS; // 2.0 in Q16.16 (131072)
-        #10;
+        en = 1;
+        @(posedge clk);
+        en = 0;
         // Expected: quotient = 1.0 in Q16.16 (65536) with no overflow
 
         // Test 2: Division of fractional numbers
         x = 0.5 * (1 << FRA_BITS); // 0.5 in Q16.16 (32768)
         y = 0.25 * (1 << FRA_BITS); // 0.25 in Q16.16 (16384)
-        #10;
+        en = 1;
+        @(posedge clk);
+        en = 0;
         // Expected: quotient = 2.0 in Q16.16 (131072) with no overflow
 
         // Test 3: Division of small numbers
         x = 2;  // 2/65536 in Q16.16 (2)
         y = 3;  // 3/65536 in Q16.16 (3)
-        #10;
+        en = 1;
+        @(posedge clk);
+        en = 0;
         // Expected: quotient = 2/3 in Q16.16 (43708) with no underflow/overflow
         // RESULT: 43690, which is an error of 0.0002746582. Negligible.
 
         // Test 4: Division with negative numbers
         x = -1 << FRA_BITS; // -1.0 in Q16.16 (-65536)
         y = 0.5 * (1 << FRA_BITS); // 0.5 in Q16.16 (32768)
-        #10;
+        en = 1;
+        @(posedge clk);
+        en = 0;
         // Expected: quotient = -2.0 in Q16.16 (-131072) with no overflow
 
         // overflow & underflow cut
@@ -197,15 +215,20 @@ module fip_32_div_tb();
         // Test 5: Division leading to overflow
         x = `FIP_MAX; // fip max value
         y = 0.25 * (1 << FRA_BITS); // 0.25 in Q16.16 (16384)
-        #10;
+        en = 1;
+        @(posedge clk);
+        en = 0;
         // Expected: overflow, quotient cut to FIP_MAX
 
         // Test 6: Division leading to underflow
         x = `FIP_MIN; // fip min value
         y = 0.25 * (1 << FRA_BITS); // 0.25 in Q16.16 (16384)
-        #10;
+        en = 1;
+        @(posedge clk);
+        en = 0;
         // Expected: underflow, quotient cut to FIP_MIN
 
+        repeat(60) @(posedge clk);
         $display("[%0d]fip_32_div: test end\n", $time());
         $stop();
     end

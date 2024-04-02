@@ -1,4 +1,4 @@
-`define NTRIS 1
+`define NTRIS 3
 
 module raytracer_tb();
     logic clk, reset;
@@ -117,6 +117,23 @@ module raytracer_tb();
         reset = 'b0;
         repeat(6) @(posedge clk);
 
+        start_rt = 1'b1;
+        @(posedge clk);
+        start_rt = 1'b0;
+
+        pass_ray();
+        avm_m0_readdatavalid = 1'b1;
+        avm_m0_readdata = 16'd`NTRIS;
+        @(posedge clk);
+        avm_m0_readdata = 16'd0;
+        @(posedge clk);
+        avm_m0_readdatavalid = 1'b0;
+
+        $display("[%0d]starting passing tri", $time());
+        pass_tri(`NTRIS);
+        $display("[%0d]passing tri end", $time());
+
+        repeat(200) @(posedge clk);
         start_rt = 1'b1;
         @(posedge clk);
         start_rt = 1'b0;
