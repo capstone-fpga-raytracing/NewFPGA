@@ -892,6 +892,7 @@ set_global_assignment -name FINAL_PLACEMENT_OPTIMIZATION NEVER
 set_global_assignment -name FITTER_AGGRESSIVE_ROUTABILITY_OPTIMIZATION NEVER
 set_global_assignment -name FITTER_EFFORT "FAST FIT"
 set_global_assignment -name ADVANCED_PHYSICAL_OPTIMIZATION OFF
+set_global_assignment -name SDC_FILE raytracer.sdc
 set_global_assignment -name QIP_FILE Computer_System/synthesis/Computer_System.qip
 set_global_assignment -name VERILOG_FILE rateDivider.v
 set_global_assignment -name SYSTEMVERILOG_FILE hex_decoder.sv
