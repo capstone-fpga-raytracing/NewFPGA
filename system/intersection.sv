@@ -10,9 +10,7 @@ typedef logic signed [31:0] fip;
 
 
 // pipelined intersection, accepts new inputs every cycle
-module intersection #(
-    parameter signed MIN_T = 0
-) (
+module intersection (
     input i_clk,
     input i_rstn,
     input i_en,
@@ -25,7 +23,6 @@ module intersection #(
     output logic [32*4-1:0] dbg_out, // temp
     output logic dbg_out_en // temp
 );
-
     // procedure of intersection:
     // sub -> det -> add -> div
     // {sub} -> {det} -> {add, div}
@@ -78,8 +75,7 @@ module intersection #(
     fip_32_add_sat add_sat_inst (.i_x(a), .i_y(b), .o_z(anb));
     logic result;
     always_comb begin
-        if (rout_coef[`DIV_CYCLE-1] != 32'd0 && a[31] == 1'b0 && b[31] == 1'b0 &&
-            ~(anb > `FIP_ONE) && t[31] == 1'b0)
+        if (rout_coef[`DIV_CYCLE-1] != 32'd0 && a[31] == 1'b0 && b[31] == 1'b0 && ~(anb > `FIP_ONE) && t != 32'd0 && t[31] == 1'b0)
             result <= 1'b1;
         else result <= 1'b0;
     end
@@ -93,7 +89,7 @@ module intersection #(
         if (~i_rstn) begin
             rout_e_t <= '{3{32'b0}};
             rout_t1 <= '{3{32'b0}};
-            rout_t2 <= '{3{32'b0}};
+            rout_t2 <= '{3{32'b0}};	
             rout__d <= '{3{32'b0}};
 
             rout_coef <= '{`DIV_CYCLE{32'b0}};
@@ -275,9 +271,7 @@ module tri_insector(
     logic inter_valid;
     logic signed [31:0] t;
     logic hit;
-    intersection #(
-        .MIN_T(0)
-    ) intersection_inst (
+    intersection intersection_inst (
         .i_clk(clk),
         .i_rstn(~reset),
         .i_en(reader_valid),
