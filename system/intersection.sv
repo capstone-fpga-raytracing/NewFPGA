@@ -127,76 +127,65 @@ module intersection (
 endmodule: intersection
 
 
-/*
-module ray_intersect_box#(
-    parameter SAT = 1,
-    parameter FRA_BITS = 16
-)(  
-    input signed [31:0] i_ray [0:1][0:2], // i_ray[0] for origin(E), i_ray[1] for direction(D)
-    input signed [31:0] pbbox [0:1][0:2], // pbbox[0] for min, pbbox[1] for max
-    output logic intersects
+module ray_intersect_box (
+    input i_clk,
+    input i_rstn,
+    input i_en,
+    input signed [31:0] i_ray [0:1][0:2], // i_ray[0]: origin(E), i_ray[1]: direction(D)
+    input signed [31:0] pbbox [0:1][0:2], // pbbox[0]: min vert, pbbox[1]: max vert
+    output logic o_result,
+    output logic o_valid
 );
+
+    function signed [31:0] max(
+        input signed [31:0] a,
+        input signed [31:0] b
+    );
+        max = a > b ? a : b;
+    endfunction: max
+
+    function signed [31:0] min(
+        input signed [31:0] a,
+        input signed [31:0] b
+    );
+        min = a < b ? a : b;
+    endfunction: min
+
+    // t_min and t_max
+    logic signed [31:0] t_min[0:2];
+    fip_32_div div_x_min(.i_x(pbbox[0][0] - i_ray[0][0]), .i_y(i_ray[1][0]), .o_z(t_min[0]));
+    fip_32_div div_y_min(.i_x(pbbox[0][1] - i_ray[0][1]), .i_y(i_ray[1][1]), .o_z(t_min[1]));
+    fip_32_div div_z_min(.i_x(pbbox[0][2] - i_ray[0][2]), .i_y(i_ray[1][2]), .o_z(t_min[2]));
+
+    logic signed [31:0] t_max[0:2];
+    fip_32_div div_x_max(.i_x(pbbox[1][0] - i_ray[0][0]), .i_y(i_ray[1][0]), .o_z(t_max[0]));
+    fip_32_div div_y_max(.i_x(pbbox[1][1] - i_ray[0][1]), .i_y(i_ray[1][1]), .o_z(t_max[1]));
+    fip_32_div div_z_max(.i_x(pbbox[1][2] - i_ray[0][2]), .i_y(i_ray[1][2]), .o_z(t_max[2]));
+
+    logic signed [31:0] t_entry_temp [0:2];
+    logic signed [31:0] t_exit_temp [0:2];
     logic signed [31:0] t_entry;
     logic signed [31:0] t_exit;
-
-    wire signed [31:0] t_min[0:2];
-    wire signed [31:0] t_max[0:2];
-    
-    // Intermediate signals for division operation results
-    wire signed [31:0] div_results[0:5];
-
-    // Instantiate division modules for each axis and boundary
-    // Computing t_min and t_max for X-axis
-    fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_x_min(.i_x(pbbox[0][0] - i_ray[0][0]), .i_y(i_ray[1][0]), .o_z(div_results[0]));
-    fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_x_max(.i_x(pbbox[1][0] - i_ray[0][0]), .i_y(i_ray[1][0]), .o_z(div_results[1]));
-    
-    // Computing t_min and t_max for Y-axis
-    fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_y_min(.i_x(pbbox[0][1] - i_ray[0][1]), .i_y(i_ray[1][1]), .o_z(div_results[2]));
-    fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_y_max(.i_x(pbbox[1][1] - i_ray[0][1]), .i_y(i_ray[1][1]), .o_z(div_results[3]));
-
-    // Computing t_min and t_max for Z-axis
-    fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_z_min(.i_x(pbbox[0][2] - i_ray[0][2]), .i_y(i_ray[1][2]), .o_z(div_results[4]));
-    fip_32_div #(.SAT(SAT), .FRA_BITS(FRA_BITS)) div_z_max(.i_x(pbbox[1][2] - i_ray[0][2]), .i_y(i_ray[1][2]), .o_z(div_results[5]));
-
-    
     always_comb begin
-    
-        t_entry = FIP_MAX;
-        t_exit = FIP_MIN;
-
-        // For each max min check, perform all comparisons
-
-        // X-axis check
-        if (i_ray[1][0] != 0) begin
-            t_entry = max(t_entry, min(t_min_x, t_max_x));
-            t_exit = min(t_exit, max(t_min_x, t_max_x));
+        for(int i = 0; i < 3; i += 1) begin: mux
+            if (i_ray[1][i][31] == 1'b1) begin: negative_condition
+                t_entry_temp[i] = t_max[i];
+                t_exit_temp[i] = t_min[i];
+            end else if (!i_ray[1][i]) begin: zero_condition
+                t_entry_temp[i] = `FIP_MIN;
+                t_exit_temp[i] = `FIP_MAX;
+            end else begin: positive_condition
+                t_entry_temp[i] = t_min[i];
+                t_exit_temp[i] = t_max[i];
+            end
         end
 
-        // Y-axis check
-        if (i_ray[1][1] != 0) begin
-            t_entry = max(t_entry, min(t_min_y, t_max_y));
-            t_exit = min(t_exit, max(t_min_y, t_max_y));
-        end
-
-        // Z-axis check
-        if (i_ray[1][2] != 0) begin
-            t_entry = max(t_entry, min(t_min_z, t_max_z));
-            t_exit = min(t_exit, max(t_min_z, t_max_z));
-        end
-
-        intersects = (t_exit >= t_entry) && (t_entry >= 0);
+        t_entry = max(t_entry_temp[0], max(t_entry_temp[1], t_entry_temp[2]));
+        t_exit = min(t_exit_temp[0], min(t_exit_temp[1], t_exit_temp[2]));
+        o_result = (t_exit >= t_entry) && (t_entry >= 0);
     end
 
-    function signed [31:0] max(signed [31:0] a, signed [31:0] b);
-        max = a > b ? a : b;
-    endfunction
-
-    function signed [31:0] min(signed [31:0] a, signed [31:0] b);
-        min = a < b ? a : b;
-    endfunction
-
 endmodule: ray_intersect_box
-*/
 
 
 // wrapper of intersect and reader
