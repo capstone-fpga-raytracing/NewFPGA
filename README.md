@@ -11,5 +11,6 @@ We designed this for a DE1-SoC FPGA, but it probably works on a DE10 as well. An
 - Hit compile (takes 7-8 mins). A .sof is generated containing the assembled FPGA core.
 - Convert the .sof to .rbf using File > Convert Programming Files. Make sure 'Compression' is ticked under Properties (otherwise the program script fails, god knows why)
 - Make sure you have the Linux terminal up and running on the FPGA from Step 1.
-- Transfer the fpga_program.sh script and the NewHPS repo to FPGA Linux via ethernet. You can use 'scp' for this.
-- Call fpga_program.sh with the .rbf to program the FPGA. If everything worked the message 'dEAd' sbould show up on the FPGA hex display.
+- Transfer the fpga_program.sh script and the NewHPS repo to FPGA Linux via ethernet. You can use the 'scp' command for this.
+  - Remove the hidden .git folder in NewHPS before transferring using scp. scp seems to silently fail when .git/ is present.
+- Setup the NewHPS repo by following its README instructions.
