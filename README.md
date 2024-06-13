@@ -1,7 +1,5 @@
 # FPGA Core
 
-We designed this for a DE1-SoC, but it probably works on a DE10 as well. Any CycloneV FPGA should also work after some changes to the Qsys design.
-
 ## Instructions
 1. Connect your PC to the DE1-SoC via Ethernet cable.
 2. Grab Intel's custom DE1-SoC Linux distribution from [here](https://ftp.intel.com/Public/Pub/fpgaup/pub/Teaching_Materials/current/SD_Images/DE1-SoC.zip), and follow [this tutorial](https://ftp.intel.com/Public/Pub/fpgaup/pub/Intel_Material/17.0/Tutorials/Linux_On_DE_Series_Boards.pdf) to set it up and open a remote shell to the DE1-SoC on your PC.
