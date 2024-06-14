@@ -1,72 +1,90 @@
-`timescale 1ns / 1ps
+`timescale 1ns/1ps
 
-module ray_intersect_box_tb();
+module tb_ray_intersect_box;
 
-    parameter SAT = 1;
-    parameter FRA_BITS = 16;
-
-    reg i_clk;
-    reg i_rst;
-    reg i_en;
+    // Testbench signals
     reg signed [31:0] i_ray [0:1][0:2];
     reg signed [31:0] pbbox [0:1][0:2];
     wire intersects;
 
-    // Instantiate the Unit Under Test (UUT)
+    // Instantiate the module
     ray_intersect_box #(
-        .SAT(SAT),
-        .FRA_BITS(FRA_BITS)
-    ) dut (
-        .i_clk(i_clk),
-        .i_rst(i_rst),
-        .i_en(i_en),
+        .SAT(1),
+        .FRA_BITS(16)
+    ) uut (
         .i_ray(i_ray),
         .pbbox(pbbox),
         .intersects(intersects)
     );
 
-    // Clock generation
-    initial begin
-        i_clk = 0;
-        forever #5 i_clk = ~i_clk; // 100MHz clock
-    end
+    // Helper function for displaying results
+    task display_results;
+        $display("Time: %0t, Intersect: %0d", $time, intersects);
+    endtask
 
-    // Test sequence
+    // Test scenario
     initial begin
-        // Initialize inputs
-        i_rst = 0; i_en = 0;
-        i_ray[0][0] = 0; i_ray[0][1] = 0; i_ray[0][2] = 0;
-        i_ray[1][0] = 0; i_ray[1][1] = 0; i_ray[1][2] = 0;
-        pbbox[0][0] = 0; pbbox[0][1] = 0; pbbox[0][2] = 0;
-        pbbox[1][0] = 0; pbbox[1][1] = 0; pbbox[1][2] = 0;
-
-        // Reset sequence
-        #10;
-        i_rst = 1; // Come out of reset
-        #10;
-        i_rst = 0;
-        // Test case 1: Ray perfectly aligned with a box
-        #10
-        i_en = 1;
+        // Testcase 1: Ray starts outside and points towards the box
+        // Expected Result: Intersect = 1
         i_ray[0][0] = 32'sd0; i_ray[0][1] = 32'sd0; i_ray[0][2] = 32'sd0;
-        i_ray[1][0] = 32'sd1000; i_ray[1][1] = 32'sd0; i_ray[1][2] = 32'sd0;
-        pbbox[0][0] = 32'sd500; pbbox[0][1] = -32'sd500; pbbox[0][2] = -32'sd500;
-        pbbox[1][0] = 32'sd1500; pbbox[1][1] = 32'sd500; pbbox[1][2] = 32'sd500;
-        #10000; // Wait for operation
+        i_ray[1][0] = 32'sd10; i_ray[1][1] = 32'sd10; i_ray[1][2] = 32'sd10;
+        pbbox[0][0] = 32'sd5; pbbox[0][1] = 32'sd5; pbbox[0][2] = 32'sd5;
+        pbbox[1][0] = 32'sd15; pbbox[1][1] = 32'sd15; pbbox[1][2] = 32'sd15;
+        #1;
+        display_results();
 
-        // Add additional test cases here...
+        // Testcase 2: Ray starts inside the box
+        // Expected Result: Intersect = 1
+        i_ray[0][0] = 32'sd10; i_ray[0][1] = 32'sd10; i_ray[0][2] = 32'sd10;
+        // Adjusting direction to point outwards
+        i_ray[1][0] = 32'sd20; i_ray[1][1] = 32'sd20; i_ray[1][2] = 32'sd20;
+        #1;
+        display_results();
 
-        // Disable for next test case setup
-        // i_en = 0;
-        #10;
+        // Testcase 3: Ray misses the box (parallel to one face and beside the box)
+        // Expected Result: Intersect = 0
+        i_ray[0][0] = 32'sd20; i_ray[0][1] = 32'sd0; i_ray[0][2] = 32'sd0;
+        i_ray[1][0] = 32'sd0; i_ray[1][1] = 32'sd10; i_ray[1][2] = 32'sd0;
+        #1;
+        display_results();
 
-        // Test case 2: Ray does not intersect with the box
-        // Re-configure `i_ray` and `pbbox` as needed
-        // Remember to set `i_en = 1;` for every new test case
+        // // Testcase 4: Ray direction towards the box but starts too far away
+        // // Expected Result: Intersect = 0
+        // i_ray[0][0] = 32'sd-100; i_ray[0][1] = 32'sd-100; i_ray[0][2] = 32'sd-100;
+        // i_ray[1][0] = 32'sd5; i_ray[1][1] = 32'sd5; i_ray[1][2] = 32'sd5;
+        // #1;
+        // display_results();
 
-        // Finish simulation
-        // #1000000;
-        $stop();
+        // // Testcase 5: Ray barely intersects the box at an edge
+        // // Expected Result: Intersect = 1
+        // i_ray[0][0] = 32'sd4; i_ray[0][1] = 32'sd4; i_ray[0][2] = 32'sd0;
+        // i_ray[1][0] = 32'sd1; i_ray[1][1] = 32'sd1; i_ray[1][2] = 32'sd10;
+        // #1;
+        // display_results();
+
+        // // Testcase 6: Ray starts at the edge of the box and points away
+        // // Expected Result: Intersect = 0
+        // i_ray[0][0] = 32'sd5; i_ray[0][1] = 32'sd5; i_ray[0][2] = 32'sd5;
+        // i_ray[1][0] = -32'sd1; i_ray[1][1] = -32'sd1; i_ray[1][2] = -32'sd10;
+        // #1;
+        // display_results();
+
+        // // Testcase 7: Ray and box are coincident at a single point (corner)
+        // // Expected Result: Intersect = 0 or 1 depending on interpretation
+        // i_ray[0][0] = 32'sd5; i_ray[0][1] = 32'sd5; i_ray[0][2] = 32'sd5;
+        // i_ray[1][0] = 32'sd0; i_ray[1][1] = 32'sd0; i_ray[1][2] = 32'sd0;
+        // #1;
+        // display_results();
+
+        // // Testcase 8: Ray is exactly aligned with one of the box's axes
+        // // Expected Result: Intersect = 1
+        // i_ray[0][0] = 32'sd0; i_ray[0][1] = 32'sd10; i_ray[0][2] = 32'sd10;
+        // i_ray[1][0] = 32'sd10; i_ray[1][1] = 32'sd0; i_ray[1][2] = 32'sd0;
+        // #1;
+        // display_results();
+
+        $stop; // End the simulation
     end
+
 
 endmodule
