@@ -31,6 +31,6 @@ echo 1 > /sys/class/fpga-bridge/hps2fpga/enable
 echo 1 > /sys/class/fpga-bridge/lwhps2fpga/enable
 
 echo "Adding kernel module..."
-insmod ~/HPSChicken/kernel/main/main.ko
+insmod ~/NewHPS/kernel/main/main.ko
 
 echo "Done."
