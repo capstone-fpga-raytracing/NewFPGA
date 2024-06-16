@@ -3,7 +3,7 @@
 ## Instructions
 1. Connect your PC to the DE1-SoC via Ethernet cable.
 2. Grab Intel's custom DE1-SoC Linux distribution from [here](https://ftp.intel.com/Public/Pub/fpgaup/pub/Teaching_Materials/current/SD_Images/DE1-SoC.zip), and follow [this tutorial](https://ftp.intel.com/Public/Pub/fpgaup/pub/Intel_Material/17.0/Tutorials/Linux_On_DE_Series_Boards.pdf) to set it up and open a remote shell to the DE1 on your PC.
-3. Install Intel Quartus 18.1 and open the DE1_SoC_Computer.qpf project in Quartus.
+3. Install Intel Quartus 18.1 and open the `raytracer.qpf` project in Quartus.
    - (versions after 18.1 do not work under Quartus Lite, since the SDRAM controller we use was removed)
 5. Open 'Computer System.qsys' in Quartus's Platform Designer and click 'Generate HDL'.
 6. Add the newly generated ComputerSystem.qip to the Quartus project.
